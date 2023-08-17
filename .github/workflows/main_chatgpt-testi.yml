@@ -52,5 +52,5 @@ jobs:
         with:
           app-name: 'chatgpt-testi'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_D30363EC85DB495A94A1D5AE02B82B98 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E08CCB0A2BDE4C559705C6EEFD6F72FF }}
           package: .
