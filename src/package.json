@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "/home/site/wwwroot/node_modules/next/dist/bin/next start",
-    "start_org": "next start",
+    "start_org": "/home/site/wwwroot/node_modules/next/dist/bin/next start",
+    "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
