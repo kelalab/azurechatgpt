@@ -1,6 +1,6 @@
 # 💙 One click - Provision Azure resources
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://aka.ms/anzappazurechatgpt)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://raw.githubusercontent.com/kelalab/azurechatgpt/main/infra/main.json)
 
 Click on the Deploy to Azure button and configure your settings in the Azure Portal as described in the [Environment variables](#-environment-variables) section.
 
