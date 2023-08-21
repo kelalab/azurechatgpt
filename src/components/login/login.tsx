@@ -10,8 +10,23 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import { useEffect } from "react";
+import { userSession } from "@/features/auth/helpers";
 
 export const LogIn = () => {
+  useEffect(() => {
+    const testLogin = async () => {
+      try {
+        let session = await userSession();
+        console.log("session", session);
+      } catch (error) {
+        //console.log("error", error);
+        signIn("azure-ad");
+      }
+    };
+    testLogin();
+  }, []);
+
   return (
     <Card className="flex gap-2 flex-col min-w-[300px]">
       <CardHeader className="gap-2">
@@ -22,7 +37,11 @@ export const LogIn = () => {
           <span className="text-primary">{AI_NAME}</span>
         </CardTitle>
         <CardDescription>
-          Login in with your Azure account
+          <p>Automatically logging you in.</p>
+          <p>
+            If this screen is visible for an extended period of time you can try
+            to manually login in with your Azure account.
+          </p>
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">

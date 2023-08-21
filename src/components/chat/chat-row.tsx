@@ -1,12 +1,12 @@
 "use client";
 import { ChatRole } from "@/features/chat/chat-services/models";
 import { cn } from "@/lib/utils";
-import { CheckIcon, ClipboardIcon } from "lucide-react";
+import { CheckIcon, ClipboardIcon, User } from "lucide-react";
 import { FC, useState } from "react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import Typography from "../typography";
-import { Avatar, AvatarImage } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { CodeBlock } from "./code-block";
 import { MemoizedReactMarkdown } from "./memoized-react-markdown";
@@ -40,6 +40,9 @@ const ChatRow: FC<ChatRowProps> = (props) => {
           <div className="flex gap-4 items-center">
             <Avatar>
               <AvatarImage src={props.profilePicture} />
+              <AvatarFallback>
+                <User />
+              </AvatarFallback>
             </Avatar>
             <Typography variant="h5" className="capitalize text-primary">
               {props.name}
