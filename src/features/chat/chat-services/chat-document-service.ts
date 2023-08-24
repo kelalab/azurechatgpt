@@ -21,9 +21,13 @@ const MAX_DOCUMENT_SIZE = 20000000;
 
 export const UploadDocument = async (formData: FormData) => {
   const { docs, file, chatThreadId } = await LoadFile(formData);
+  console.log("file loaded");
   const splitDocuments = await SplitDocuments(docs);
+  console.log("document split");
   const docPageContents = splitDocuments.map((item) => item.pageContent);
+  console.log("split do mapped");
   await IndexDocuments(file, docPageContents, chatThreadId);
+  console.log("indexed");
   return file.name;
 };
 
@@ -77,6 +81,7 @@ const IndexDocuments = async (
   chatThreadId: string
 ) => {
   const vectorStore = initAzureSearchVectorStore();
+  console.log("initialized azure search vector store");
   const documentsToIndex: FaqDocumentIndex[] = [];
   let index = 0;
   for (const doc of docs) {
@@ -92,8 +97,9 @@ const IndexDocuments = async (
     documentsToIndex.push(docToAdd);
     index++;
   }
-
+  console.log("after loop");
   await vectorStore.addDocuments(documentsToIndex);
+  console.log("added document to store");
   await UpsertChatDocument(file.name, chatThreadId);
 };
 

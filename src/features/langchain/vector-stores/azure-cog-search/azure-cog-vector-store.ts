@@ -77,11 +77,25 @@ export class AzureCogSearch<
   }
 
   async addDocuments(documents: Document<TModel>[]): Promise<string[]> {
+    console.log("addDocuments start", documents);
     const texts = documents.map(({ pageContent }) => pageContent);
-    return this.addVectors(
+    console.log("Texts", texts);
+    console.log(
+      "this.embeddings",
+      this.embeddings,
+      this.embeddings.embedDocuments
+    );
+
+    let vectors = await this.addVectors(
       await this.embeddings.embedDocuments(texts),
       documents
     );
+    return vectors;
+
+    /*return this.addVectors(
+      await this.embeddings.embedDocuments(texts),
+      documents
+    );*/
   }
 
   /**
@@ -123,6 +137,7 @@ export class AzureCogSearch<
     vectors: number[][],
     documents: Document<TModel>[]
   ): Promise<string[]> {
+    console.log("addVectors start");
     const indexes: Array<any> = [];
 
     documents.forEach((document, i) => {
@@ -150,6 +165,7 @@ export class AzureCogSearch<
       documentIndexRequest,
       this._config.apiKey
     );
+
     return responseObj.value.map((doc: any) => doc.key);
   }
 
@@ -194,7 +210,12 @@ const fetcher = async (url: string, body: any, apiKey: string) => {
 
   if (!response.ok) {
     const err = await response.json();
-    console.log(err);
+    console.log("err", err);
+    if (err == null) {
+      console.log("response", response);
+      console.log("text", await response.text());
+      throw new Error(err);
+    }
     throw new Error(JSON.stringify(err));
   }
 
