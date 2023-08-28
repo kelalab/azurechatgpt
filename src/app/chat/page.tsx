@@ -11,6 +11,7 @@ export default async function Home() {
 
   return (
     <Card className="h-full items-center flex justify-center">
+      <Disclaimer />
       <StartNewChat />
     </Card>
   );

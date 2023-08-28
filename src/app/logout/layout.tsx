@@ -1,5 +1,3 @@
-import Disclaimer from "@/components/disclaimer";
-import { ProtectedPage } from "@/features/auth/protected-page";
 import { ChatMenu } from "@/features/chat/chat-menu/chat-menu";
 import { MainMenu } from "@/features/menu/menu";
 import { AI_NAME } from "@/features/theme/customise";
@@ -15,11 +13,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ProtectedPage>
-      <Disclaimer />
-      <MainMenu />
-      <ChatMenu />
-      <div className="flex-1">{children}</div>
-    </ProtectedPage>
+    <>
+      {/* <MainMenu /> */}
+      {/* <ChatMenu /> */}
+      <div className="flex-1 flex items-center justify-center">{children}</div>
+    </>
   );
 }

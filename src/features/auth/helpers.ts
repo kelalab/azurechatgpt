@@ -5,6 +5,7 @@ import { options } from "./auth-api";
 export const userSession = async (): Promise<UserModel | null> => {
   const session = await getServerSession(options);
   if (session && session.user) {
+    //console.log("session.user", session, session?.user.roles);
     return session.user as UserModel;
   }
 
@@ -26,6 +27,7 @@ export type UserModel = {
   name: string;
   image: string;
   email: string;
+  roles: string[];
 };
 
 export const hashValue = (value: string): string => {
