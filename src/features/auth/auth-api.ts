@@ -1,7 +1,8 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions, Session } from "next-auth";
 import { Provider } from "next-auth/providers";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import GitHubProvider from "next-auth/providers/github";
+import { UserModel } from "./helpers";
 
 const configureIdentityProvider = () => {
   const providers: Array<Provider> = [];
@@ -67,19 +68,25 @@ export const options: NextAuthOptions = {
   callbacks: {
     jwt({ token, user, profile }) {
       //console.log("token", token, "user", user, "profile", profile);
-      if (user) {
-        token.roles = user.roles;
+      const _user = user as unknown as UserModel;
+      if (_user) {
+        token.roles = _user.roles;
       }
       return token;
     },
     session({ session, token }) {
       //console.log("token", token, "session", session);
-      if (token && session.user) {
-        session.user.roles = token.roles;
+      let _session = session as unknown as ISession;
+      if (token && _session.user) {
+        _session.user.roles = token.roles as unknown as string[];
       }
-      return session;
+      return _session;
     },
   },
 };
+
+export interface ISession extends Session {
+  user: UserModel;
+}
 
 export const handlers = NextAuth(options);
