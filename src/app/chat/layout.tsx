@@ -16,10 +16,14 @@ export default async function RootLayout({
 }) {
   return (
     <ProtectedPage>
-      <Disclaimer />
-      <MainMenu />
-      <ChatMenu />
-      <div className="flex-1">{children}</div>
+      <div className="flex flex-col">
+        <Disclaimer />
+        <div className="flex flex-col md:flex-row">
+          <MainMenu />
+          <ChatMenu />
+          <div className="flex-1">{children}</div>
+        </div>
+      </div>
     </ProtectedPage>
   );
 }
