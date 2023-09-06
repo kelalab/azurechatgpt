@@ -1,3 +1,3 @@
 export const AI_NAME = "Kelalab ChatGPT";
 export const DISCLAIMER_TEXT =
-  "Huom! Syötäthän tekoälylle vain julkisesti saatavilla olevaa informaatiota. Kaikki syöttämäsi tieto lähetetään Amerikkaan.";
+  "Kela-työssä saa käyttää vain Kelan hyväksymiä pilvipalveluita, jotka löytyvät listalta Hyväksytyt SaaS-palvelut. Julkisissa pilvipalveluissa, pilotti- ja koestuskäytössä olevissa järjestelmissä, kuten Microsoft Office 365 -palvelussa ja kumppaneiden hallinnassa olevissa työtiloissa ei saa käsitellä salassa pidettävää tietoa (esim. asiakkaiden tiedot).";
