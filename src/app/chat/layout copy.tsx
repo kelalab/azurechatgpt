@@ -16,16 +16,12 @@ export default async function RootLayout({
 }) {
   return (
     <ProtectedPage>
-      <div className="grid grid-cols-1 h-full w-full auto-rows-min max-h-screen overflow-hidden">
+      <div className="flex flex-col">
         <Disclaimer />
-        <div className="grid-cols-1 grid md:grid-cols-24 auto-rows-min md:auto-rows-fr max-h-[88vh] md:max-h-[86vh] lg:max-h-[88vh] gap-2">
-          <div className="md:flex">
-            <MainMenu />
-          </div>
-          <div className="md:col-span-7 md:flex border rounded-xl">
-            <ChatMenu />
-          </div>
-          <div className="md:col-span-16 flex flex-1">{children}</div>
+        <div className="flex flex-col md:flex-row h-full">
+          <MainMenu />
+          <ChatMenu />
+          <div className="flex-1">{children}</div>
         </div>
       </div>
     </ProtectedPage>

@@ -7,11 +7,7 @@ const Menu = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("w-full md:w-64 flex flex-col", className)}
-    {...props}
-  />
+  <div ref={ref} className={cn("w-full flex flex-col", className)} {...props} />
 ));
 
 Menu.displayName = "Menu";
