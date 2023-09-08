@@ -115,7 +115,7 @@ export const ChatUI: FC<Prop> = (props) => {
 
   const ChatWindow = (
     <div
-      className=" h-full max-h-[54vh] md:max-h-none rounded-md overflow-y-auto"
+      className=" h-full max-h-[64vh] md:max-h-none rounded-md overflow-y-auto"
       ref={scrollRef}
     >
       <div className="flex justify-center p-4">

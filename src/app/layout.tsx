@@ -5,7 +5,6 @@ import { AI_NAME } from "@/features/theme/customise";
 import { cn } from "@/lib/utils";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Disclaimer from "@/components/disclaimer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,7 +28,6 @@ export default function RootLayout({
       >
         <Providers>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            {/* <Disclaimer /> */}
             <div
               className={cn(
                 inter.className,
@@ -38,7 +36,9 @@ export default function RootLayout({
             >
               {children}
             </div>
-
+            <div className="border text-center py-2 text-sm">
+              2023 Copyright Kela | a Kelalab product | Not for production use
+            </div>
             <Toaster />
           </ThemeProvider>
         </Providers>
