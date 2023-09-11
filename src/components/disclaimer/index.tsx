@@ -26,7 +26,7 @@ const Disclaimer = () => {
   return (
     <div
       className={`relative flex items-center justify-center mt-2 mb-2 max-h-20 md:max-h-16 lg:max-h-12 ${
-        show ? "visible" : "invisible h-0"
+        show ? "visible" : "invisible hidden h-0"
       }`}
     >
       <div className="relative flex items-center justify-center bg-warning rounded-md px-2 pr-8 md:px-8">

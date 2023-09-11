@@ -31,12 +31,12 @@ export default function RootLayout({
             <div
               className={cn(
                 inter.className,
-                "flex flex-col md:flex-row h-full w-full p-2 gap-2 bg-page-background"
+                "flex flex-col md:flex-row md:h-full w-full p-2 gap-2 bg-page-background h-[85vh]"
               )}
             >
               {children}
             </div>
-            <div className="border text-center py-2 text-2xs md:text-sm">
+            <div className="border text-center py-2 text-2xs md:text-sm h-[15vh] md:h-auto">
               2023 Copyright Kela | a Kelalab product | Not for production use
             </div>
             <Toaster />
