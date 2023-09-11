@@ -36,7 +36,7 @@ export default function RootLayout({
             >
               {children}
             </div>
-            <div className="border text-center py-2 text-xs md:text-sm">
+            <div className="border text-center py-2 text-2xs md:text-sm">
               2023 Copyright Kela | a Kelalab product | Not for production use
             </div>
             <Toaster />

@@ -31,7 +31,7 @@ const MenuContent = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "flex flex-col flex-1 overflow-y-auto py-2 gap-0.5",
+      "flex flex-col flex-1 overflow-y-auto h-full py-2 gap-0.5",
       className
     )}
     {...props}

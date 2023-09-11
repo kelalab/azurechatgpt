@@ -1,5 +1,5 @@
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { BarChartHorizontalBig } from "lucide-react";
+import { BarChartHorizontalBig, Info } from "lucide-react";
 import Link from "next/link";
 import { UserProfile } from "../user-profile";
 
@@ -22,6 +22,13 @@ export const MainMenu = () => {
           title="Reporting"
         >
           <BarChartHorizontalBig size={20} />
+        </Link>
+        <Link
+          href="/info"
+          className="w-10 h-10 items-center justify-center flex rounded-full hover:bg-secondary"
+          title="Info"
+        >
+          <Info size={20} />
         </Link>
       </div>
       <UserProfile />

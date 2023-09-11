@@ -22,11 +22,11 @@ export const NewChat = () => {
   return (
     <Button
       className="gap-2"
-      variant={"outline"}
-      size={"sm"}
+      variant={"link"}
+      //size={"sm"}
       onClick={() => startNewChat()}
     >
-      <PlusCircle size={16} /> New chat
+      <PlusCircle size={16} /> Start new chat
     </Button>
   );
 };

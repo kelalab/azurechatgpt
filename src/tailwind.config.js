@@ -11,7 +11,7 @@ module.exports = {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1.5rem",
       screens: {
         "2xl": "1400px",
       },
@@ -80,7 +80,16 @@ module.exports = {
       gridColumn: {
         "span-12": "span 12 / span 12",
         "span-14": "span 14 / span 14",
+        "span-15": "span 15 / span 15",
         "span-16": "span 16 / span 16",
+      },
+      fontSize: {
+        "2xs": [
+          "0.625rem",
+          {
+            lineHeight: "0.75rem",
+          },
+        ],
       },
     },
   },
