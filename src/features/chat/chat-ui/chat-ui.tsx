@@ -143,7 +143,7 @@ export const ChatUI: FC<Prop> = (props) => {
   );
 
   return (
-    <Card className="h-full relative lg:overflow-hidden">
+    <Card className="h-full relative md:overflow-hidden">
       {messages.length !== 0 ? (
         ChatWindow
       ) : (
