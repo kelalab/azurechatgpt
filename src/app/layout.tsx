@@ -5,6 +5,7 @@ import { AI_NAME } from "@/features/theme/customise";
 import { cn } from "@/lib/utils";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Disclaimer from "@/components/disclaimer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,6 +29,9 @@ export default function RootLayout({
       >
         <Providers>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <div className="px-2">
+              <Disclaimer />
+            </div>
             <div
               className={cn(
                 inter.className,

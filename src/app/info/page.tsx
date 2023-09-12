@@ -7,13 +7,14 @@ const Home = () => {
       <CardContent className="flex flex-col justify-center">
         <h2 className="underline">UI</h2>
         <p className="mb-2 text-sm">
-          The UI for this application is based on a previous design and was
-          redesigned and improved by Kelalab.
+          Tämä käyttöliittymä on Kelalabin muokkaama ja parantama.
+          Käyttöliittymää jakeleva palvelu sijaitsee Ruotsissa.
         </p>
         <h2 className="underline">Backend</h2>
         <p className="mb-2 text-sm">
-          Ai model behind this UI is based on Azure OpenAI and currently
-          physically located in United States.
+          Käyttöliittymä kutsuu erinäisiä palveluita, jotka tällä erää
+          sijaitsevat Amerikassa. Taustalla käytössä on Azuren OpenAI
+          tekoälymallit.
         </p>
       </CardContent>
     </Card>

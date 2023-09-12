@@ -52,6 +52,9 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
         "items-center text-sm font-medium flex gap-2 p-2 py-1 rounded-md hover:bg-secondary",
         props.isSelected && "bg-secondary text-primary"
       )}
+      onClick={(e) => {
+        console.log("event", e);
+      }}
       href={props.href}
     >
       {props.children}

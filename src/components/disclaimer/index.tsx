@@ -25,15 +25,15 @@ const Disclaimer = () => {
 
   return (
     <div
-      className={`relative flex items-center justify-center mt-2 mb-2 max-h-20 md:max-h-16 lg:max-h-12 ${
+      className={`relative flex items-center justify-center mt-2 mb-2 max-h-20 md:h-16 lg:h-12 ${
         show ? "visible" : "invisible hidden h-0"
       }`}
     >
-      <div className="relative flex items-center justify-center bg-warning rounded-md px-2 pr-8 md:px-8">
+      <div className="relative flex items-center justify-center bg-warning rounded-md px-2 pr-8 md:px-8 lg:h-12">
         <div className="hidden md:visible">
           <AlertTriangle className="mx-4" size={24} />
         </div>
-        <div className="text-xs md:text-sm h-full overflow-hidden">
+        <div className="text-xs md:text-sm overflow-hidden">
           {DISCLAIMER_TEXT}
         </div>
         <div className="absolute -top-1 -right-1">
