@@ -35,7 +35,7 @@ export default function RootLayout({
             <div
               className={cn(
                 inter.className,
-                "flex flex-col md:flex-row md:h-full w-full p-2 gap-2 bg-page-background h-[85vh]"
+                "flex flex-col md:flex-row h-[85vh] md:h-full w-full bg-page-background"
               )}
             >
               {children}
