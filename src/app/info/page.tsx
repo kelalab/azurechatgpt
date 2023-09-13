@@ -40,6 +40,15 @@ const Home = () => {
           seksuaalista sisältöä, väkivaltaisia tai aseiden kuvauksia eikä
           itsetuhoisuutta koskevia ilmaisuja.
         </p>
+        <p>
+          Katso tarkemmin
+          <a
+            href="https://learn.microsoft.com/fi-FI/legal/cognitive-services/openai/code-of-conduct"
+            className="text-primary"
+          >
+            Code of Conduct for the Azure OpenAI Service | Microsoft Learn
+          </a>
+        </p>
       </CardContent>
     </Card>
   );
