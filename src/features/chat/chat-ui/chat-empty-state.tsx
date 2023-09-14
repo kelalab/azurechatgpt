@@ -37,7 +37,7 @@ export const EmptyState: FC<Prop> = (props) => {
   };
 
   return (
-    <div className="grid grid-cols-5 w-full container mx-auto max-w-3xl justify-center overflow-auto pb-24">
+    <div className="grid grid-cols-5 w-full container mx-auto max-w-3xl justify-center overflow-y-auto h-full pb-24 max-h-[60vh] md:max-h-none">
       <div className="col-span-5 gap-4 mt-4 flex flex-col flex-1">
         <Typography variant="h4" className="text-primary">
           Hello!
@@ -110,6 +110,7 @@ export const EmptyState: FC<Prop> = (props) => {
           </div>
         )}
       </Card>
+      <div className="h-24"></div>
     </div>
   );
 };

@@ -18,7 +18,7 @@ export default async function RootLayout({
 }) {
   return (
     <ProtectedPage>
-      <div className="grid grid-cols-1 h-full w-full auto-rows-max max-h-screen overflow-hidden">
+      <div className="grid grid-cols-1 h-full w-full auto-rows-max md:auto-rows-auto max-h-screen overflow-hidden">
         <ChatLayout>{children}</ChatLayout>
         {/* <div className="grid-cols-1 grid md:grid-cols-24 auto-rows-max md:auto-rows-fr max-h-[88vh] md:max-h-[86vh] lg:max-h-[88vh] gap-2">
           <div className="md:flex md:col-span-2 lg:col-span-1">

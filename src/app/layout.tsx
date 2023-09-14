@@ -21,12 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full lg:overflow-hidden">
-      <body
-        className={cn(
-          inter.className,
-          "flex flex-col w-full h-full bg-page-background"
-        )}
-      >
+      <body className={cn(inter.className, "w-full h-full bg-page-background")}>
         <Providers>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <div className="px-2">
@@ -35,12 +30,12 @@ export default function RootLayout({
             <div
               className={cn(
                 inter.className,
-                "flex flex-col md:flex-row h-[85vh] md:h-full w-full bg-page-background"
+                "flex flex-col md:flex-row h-auto w-full bg-page-background page-container"
               )}
             >
               {children}
             </div>
-            <div className="border text-center py-2 text-2xs md:text-sm h-[15vh] md:h-auto">
+            <div className="border text-center py-2 text-2xs md:text-sm h-10">
               2023 Copyright Kela | a Kelalab product | Not for production use
             </div>
             <Toaster />

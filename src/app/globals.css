@@ -63,3 +63,13 @@
 .fill-available {
   height: -webkit-fill-available;
 }
+
+.page-container {
+  height: calc(100% - 2.5rem);
+}
+
+@media screen and (max-width: 768px) {
+  .page-container {
+    height: auto;
+  }
+}
