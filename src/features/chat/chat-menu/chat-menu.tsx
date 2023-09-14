@@ -20,11 +20,12 @@ export const ChatMenu = () => {
     const load = async () => {
       const _showMenu = cookies.get("showChatList");
       const _items = await FindAllChatThreadForCurrentUser();
-      setItems(_items);
-      setShowMenu(_showMenu);
+      console.log("items", _items);
+      if (_items.length !== items.length) setItems(_items);
     };
     load();
-  }, []);
+  }),
+    [];
 
   const toggleShowChatList = () => {
     cookies.set("showChatList", !showMenu);

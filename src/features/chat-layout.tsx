@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { ChatMenu } from "./chat/chat-menu/chat-menu";
 import { MainMenu } from "./menu/menu";
 import Cookies from "universal-cookie";
-import { truncate } from "fs/promises";
 
 const ChatLayout = ({ children }: { children: React.ReactNode }) => {
   const cookies = new Cookies(null, { path: "/" });

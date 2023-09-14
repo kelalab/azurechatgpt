@@ -51,6 +51,7 @@ export const MenuItems: FC<Prop> = (props) => {
             variant={"ghost"}
             onClick={async (e) => {
               e.preventDefault();
+              e.stopPropagation();
               const yesDelete = confirm(
                 "Are you sure you want to delete this chat?"
               );
