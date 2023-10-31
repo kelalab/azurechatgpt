@@ -1,5 +1,6 @@
 import psycopg2
 import sys, getopt
+
 conn = psycopg2.connect(
    database="embeddings",
    user="pgvector",
@@ -7,11 +8,10 @@ conn = psycopg2.connect(
    host="localhost"
 )
 
-
-
 def create_table(name="embeddings"):
    cur = conn.cursor()
    table_create_command = f"""
+   CREATE EXTENSION IF NOT EXISTS vector;
    CREATE TABLE {name} (
                id text primary key, 
                chatThreadId text,
@@ -25,7 +25,7 @@ def create_table(name="embeddings"):
    cur.close()
    conn.commit()
 
-def main():
+if __name__ == "__main__":
    """Read table name from args """
    opts, args = getopt.getopt(sys.argv[1:], "n:", ["name="])
    for opt, arg in opts:
@@ -35,6 +35,3 @@ def main():
          print("created table: ", arg)
          sys.exit()
    create_table()
-
-if __name__ == "__main__":
-   main()
