@@ -106,6 +106,9 @@ def process_input_with_retrieval(user_input):
     print("related_docs before filter", related_docs)
     related_docs = list(filter(lambda x: x[2]<distance_limit,related_docs))
     print("related_docs", related_docs)
+    content = ""
+    for rl in related_docs:
+       content += re.sub(r'\n', ' ',rl[0])
     #TODO: siivoa dokumentit
     
     #content = ""
@@ -115,8 +118,9 @@ def process_input_with_retrieval(user_input):
     1. Suositus
     2. Perustelu suositukselle.
     3. Listaus kaikista poikkeustilanteista
-    Perustelut löytyvät tästä tekstistä: ### {related_docs} ###
+    Perustelut löytyvät tästä tekstistä: ### {content} ###
     """
+    system_message = re.sub(r'\n', ' ', system_message)
     #    
 
     # Prepare messages to pass to model
