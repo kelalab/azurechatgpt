@@ -12,7 +12,8 @@ const ChatLayout = ({ children }: { children: React.ReactNode }) => {
     const load = async () => {
       const _show = cookies.get("showDisclaimer");
       console.log("show", _show);
-      if (_show !== undefined) setDisclaimerVisible(_show);
+      if (_show !== undefined && disclaimerVisible !== _show)
+        setDisclaimerVisible(_show);
     };
     load();
   }, []);

@@ -1,7 +1,7 @@
 "use server";
 
 import { userHashedId } from "@/features/auth/helpers";
-import { initDBContainer } from "@/features/common/cosmos";
+import { initDBContainer } from "@/features/common/posgres";
 import { AzureCogSearch } from "@/features/langchain/vector-stores/azure-cog-search/azure-cog-vector-store";
 import {
   AzureKeyCredential,
@@ -16,12 +16,15 @@ import {
   ChatDocumentModel,
   FaqDocumentIndex,
 } from "./models";
+import { PgVectorSearch } from "@/features/langchain/vector-stores/pgvector/pgvector-store";
+import { ChatDocument } from "@prisma/client";
+import AdmZip from "adm-zip";
 
 const MAX_DOCUMENT_SIZE = 20000000;
 
 export const UploadDocument = async (formData: FormData) => {
   const { docs, file, chatThreadId } = await LoadFile(formData);
-  console.log("file loaded");
+  console.log("file loaded", docs, file, chatThreadId);
   const splitDocuments = await SplitDocuments(docs);
   console.log("document split");
   const docPageContents = splitDocuments.map((item) => item.pageContent);
@@ -34,36 +37,70 @@ export const UploadDocument = async (formData: FormData) => {
 const LoadFile = async (formData: FormData) => {
   const file: File | null = formData.get("file") as unknown as File;
   const chatThreadId: string = formData.get("id") as unknown as string;
-
+  console.log("file", file);
   if (file && file.size < MAX_DOCUMENT_SIZE) {
-    const client = initDocumentIntelligence();
-
-    const blob = new Blob([file], { type: file.type });
-
-    const poller = await client.beginAnalyzeDocument(
-      "prebuilt-document",
-      await blob.arrayBuffer()
-    );
-
-    const { paragraphs } = await poller.pollUntilDone();
-
-    const docs: Document[] = [];
-
-    if (paragraphs) {
-      for (const paragraph of paragraphs) {
+    if (file.type == "application/zip") {
+      const blob = new Blob([file], { type: file.type });
+      const arrayBuffer = await blob.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      let zip = new AdmZip(buffer);
+      const entries = zip.getEntries();
+      const docs: Document[] = [];
+      entries.forEach(function (zipEntry) {
+        console.log(zipEntry.getData().toString("utf8")); // outputs zip entries information
+        const data = zipEntry.getData().toString("utf8");
         const doc: Document = {
-          pageContent: paragraph.content,
+          pageContent: data,
           metadata: {
-            file: file.name,
+            file: zipEntry.name,
           },
         };
         docs.push(doc);
-      }
-    } else {
-      throw new Error("No content found in document.");
+      });
+      return { docs, file, chatThreadId };
     }
+    if (file.type == "text/markdown") {
+      const docs: Document[] = [];
+      const data = await file.text();
+      console.log("md data", data);
+      const doc: Document = {
+        pageContent: data,
+        metadata: {
+          file: file.name,
+        },
+      };
+      docs.push(doc);
+      return { docs, file, chatThreadId };
+    } else {
+      const client = initDocumentIntelligence();
 
-    return { docs, file, chatThreadId };
+      const blob = new Blob([file], { type: file.type });
+
+      const poller = await client.beginAnalyzeDocument(
+        "prebuilt-document",
+        await blob.arrayBuffer()
+      );
+
+      const { paragraphs } = await poller.pollUntilDone();
+
+      const docs: Document[] = [];
+
+      if (paragraphs) {
+        for (const paragraph of paragraphs) {
+          const doc: Document = {
+            pageContent: paragraph.content,
+            metadata: {
+              file: file.name,
+            },
+          };
+          docs.push(doc);
+        }
+      } else {
+        throw new Error("No content found in document.");
+      }
+
+      return { docs, file, chatThreadId };
+    }
   }
   throw new Error("Invalid file format or size. Only PDF files are supported.");
 };
@@ -105,12 +142,10 @@ const IndexDocuments = async (
 
 export const initAzureSearchVectorStore = () => {
   const embedding = new OpenAIEmbeddings();
-  const azureSearch = new AzureCogSearch<FaqDocumentIndex>(embedding, {
+  const azureSearch = new PgVectorSearch<FaqDocumentIndex>(embedding, {
     name: process.env.AZURE_SEARCH_NAME,
     indexName: process.env.AZURE_SEARCH_INDEX_NAME,
-    apiKey: process.env.AZURE_SEARCH_API_KEY,
-    apiVersion: process.env.AZURE_SEARCH_API_VERSION,
-    vectorFieldName: "embedding",
+    vectorFieldName: "vector",
   });
 
   return azureSearch;
@@ -132,7 +167,7 @@ export const UpsertChatDocument = async (
   fileName: string,
   chatThreadID: string
 ) => {
-  const modelToSave: ChatDocumentModel = {
+  const modelToSave: ChatDocument = {
     chatThreadId: chatThreadID,
     id: nanoid(),
     userId: await userHashedId(),
@@ -143,5 +178,9 @@ export const UpsertChatDocument = async (
   };
 
   const container = await initDBContainer();
-  await container.items.upsert(modelToSave);
+  await container.chatDocument.createMany({
+    data: [modelToSave],
+    skipDuplicates: true,
+  });
+  //await container.items.upsert(modelToSave);
 };

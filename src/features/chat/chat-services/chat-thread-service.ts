@@ -3,78 +3,46 @@ import "server-only";
 
 import { userHashedId, userSession } from "@/features/auth/helpers";
 import { FindAllChats } from "@/features/chat/chat-services/chat-service";
-import { SqlQuerySpec } from "@azure/cosmos";
 import { nanoid } from "nanoid";
-import { initDBContainer } from "../../common/cosmos";
+import { initDBContainer } from "../../common/posgres";
 import {
+  CHAT_DOCUMENT_ATTRIBUTE,
   CHAT_THREAD_ATTRIBUTE,
-  ChatMessageModel,
-  ChatThreadModel,
   ChatType,
   ConversationStyle,
   LLMModel,
   PromptGPTProps,
 } from "./models";
+import { ChatMessage, ChatThread } from "@prisma/client";
 
 export const FindAllChatThreadForCurrentUser = async () => {
   const container = await initDBContainer();
 
-  const querySpec: SqlQuerySpec = {
-    query:
-      "SELECT * FROM root r WHERE r.type=@type AND r.userId=@userId AND r.isDeleted=@isDeleted ORDER BY r.createdAt DESC",
-    parameters: [
-      {
-        name: "@type",
-        value: CHAT_THREAD_ATTRIBUTE,
-      },
-      {
-        name: "@userId",
-        value: await userHashedId(),
-      },
-      {
-        name: "@isDeleted",
-        value: false,
-      },
-    ],
-  };
+  const resources = await container.chatThread.findMany({
+    where: {
+      type: CHAT_THREAD_ATTRIBUTE,
+      userId: await userHashedId(),
+      isDeleted: false,
+    },
+  });
 
-  const { resources } = await container.items
-    .query<ChatThreadModel>(querySpec, {
-      partitionKey: await userHashedId(),
-    })
-    .fetchAll();
+  console.log("resources", resources);
   return resources;
 };
 
 export const FindChatThreadByID = async (id: string) => {
   const container = await initDBContainer();
 
-  const querySpec: SqlQuerySpec = {
-    query:
-      "SELECT * FROM root r WHERE r.type=@type AND r.userId=@userId AND r.id=@id AND r.isDeleted=@isDeleted",
-    parameters: [
-      {
-        name: "@type",
-        value: CHAT_THREAD_ATTRIBUTE,
-      },
-      {
-        name: "@userId",
-        value: await userHashedId(),
-      },
-      {
-        name: "@id",
-        value: id,
-      },
-      {
-        name: "@isDeleted",
-        value: false,
-      },
-    ],
-  };
+  const resources = await container.chatThread.findMany({
+    where: {
+      type: CHAT_THREAD_ATTRIBUTE,
+      userId: await userHashedId(),
+      id: id,
+      isDeleted: false,
+    },
+  });
 
-  const { resources } = await container.items
-    .query<ChatThreadModel>(querySpec)
-    .fetchAll();
+  console.log("threads for user", resources);
 
   return resources;
 };
@@ -92,7 +60,11 @@ export const SoftDeleteChatThreadByID = async (chatThreadID: string) => {
         ...chat,
       };
       itemToUpdate.isDeleted = true;
-      await container.items.upsert(itemToUpdate);
+      await container.chatMessage.upsert({
+        where: { id: chat.id },
+        update: itemToUpdate,
+        create: itemToUpdate,
+      });
     });
 
     threads.forEach(async (thread) => {
@@ -100,7 +72,11 @@ export const SoftDeleteChatThreadByID = async (chatThreadID: string) => {
         ...thread,
       };
       itemToUpdate.isDeleted = true;
-      await container.items.upsert(itemToUpdate);
+      await container.chatThread.upsert({
+        where: { id: thread.id },
+        update: itemToUpdate,
+        create: itemToUpdate,
+      });
     });
   }
 };
@@ -116,22 +92,46 @@ export const EnsureChatThreadIsForCurrentUser = async (
   return modelToSave[0];
 };
 
-export const UpsertChatThread = async (chatThread: ChatThreadModel) => {
+export const UpsertChatThread = async (chatThread: ChatThread) => {
   const container = await initDBContainer();
+  console.log("upsert chatThread", chatThread);
+  const updatedChatThread = await container.chatThread.upsert({
+    where: {
+      id: chatThread.id,
+    },
+    update: {
+      ...chatThread,
+    },
+    create: {
+      id: chatThread.id,
+      name: chatThread.name,
+      userId: chatThread.userId,
+      userName: chatThread.userName,
+      model: chatThread.model,
+      chatType: chatThread.chatType,
+      conversationStyle: chatThread.conversationStyle,
+      createdAt: chatThread.createdAt,
+      isDeleted: chatThread.isDeleted,
+      type: chatThread.type,
+    },
+  });
+  console.log("updated chatThread", updatedChatThread);
+
+  /*
   const updatedChatThread = await container.items.upsert<ChatThreadModel>(
     chatThread
   );
 
   if (updatedChatThread === undefined) {
     throw new Error("Chat thread not found");
-  }
+  }*/
 
   return updatedChatThread;
 };
 
 export const updateChatThreadTitle = async (
-  chatThread: ChatThreadModel,
-  messages: ChatMessageModel[],
+  chatThread: ChatThread,
+  messages: ChatMessage[],
   modelName: LLMModel,
   chatType: ChatType,
   conversationStyle: ConversationStyle,
@@ -146,16 +146,16 @@ export const updateChatThreadTitle = async (
       name: userMessage.substring(0, 30),
     });
 
-    return updatedChatThread.resource!;
+    return updatedChatThread!;
   }
 
   return chatThread;
 };
 
 export const CreateChatThread = async () => {
-  const modelToSave: ChatThreadModel = {
+  const modelToSave: ChatThread = {
     name: "new chat",
-    useName: (await userSession())!.name,
+    userName: (await userSession())!.name,
     userId: await userHashedId(),
     id: nanoid(),
     createdAt: new Date(),
@@ -167,10 +167,16 @@ export const CreateChatThread = async () => {
   };
 
   const container = await initDBContainer();
-  const response = await container.items.create<ChatThreadModel>(modelToSave);
-  return response.resource;
+  const response = await container.chatThread.create({ data: modelToSave });
+  console.log("created chat", response);
+  return response;
 };
 
+/**
+ *
+ * @param props
+ * @returns
+ */
 export const initAndGuardChatSession = async (props: PromptGPTProps) => {
   const { messages, id, model, chatType, conversationStyle } = props;
 

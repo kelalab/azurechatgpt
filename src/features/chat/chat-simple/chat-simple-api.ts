@@ -42,10 +42,15 @@ export const ChatSimple = async (props: PromptGPTProps) => {
   });
 
   const chatPrompt = ChatPromptTemplate.fromPromptMessages([
-    SystemMessagePromptTemplate.fromTemplate(
+    /*SystemMessagePromptTemplate.fromTemplate(
       `-You are ${AI_NAME} who is a helpful AI Assistant.
       - You will provide clear and concise queries, and you will respond with polite and professional answers.
       - You will answer questions truthfully and accurately.`
+    ),*/
+    SystemMessagePromptTemplate.fromTemplate(
+      `-Sinä olet ${AI_NAME}, joka on ystävällinen toimeentulotuen avustaja.
+      - Tarjoat selkeitä ja yhteneväisiä lauseita ja vastaat kohteliaasti ja ammattimaisesti.
+      - Vastaat kysymyksiin todenmukaisesti ja tarkasti`
     ),
     new MessagesPlaceholder("history"),
     HumanMessagePromptTemplate.fromTemplate("{input}"),

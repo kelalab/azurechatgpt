@@ -1,14 +1,23 @@
 "use server";
 import "server-only";
 
-import { SqlQuerySpec } from "@azure/cosmos";
 import { nanoid } from "nanoid";
-import { initDBContainer } from "../../common/cosmos";
+import { initDBContainer } from "../../common/posgres";
 import { ChatMessageModel, MESSAGE_ATTRIBUTE } from "./models";
+import { ChatMessage } from "@prisma/client";
 
 export const FindAllChats = async (chatThreadID: string) => {
   const container = await initDBContainer();
 
+  const resources: ChatMessage[] = await container.chatMessage.findMany({
+    where: {
+      type: MESSAGE_ATTRIBUTE,
+      threadId: chatThreadID,
+      isDeleted: false,
+    },
+  });
+
+  /*
   const querySpec: SqlQuerySpec = {
     query:
       "SELECT * FROM root r WHERE r.type=@type AND r.threadId = @threadId AND r.isDeleted=@isDeleted",
@@ -30,13 +39,13 @@ export const FindAllChats = async (chatThreadID: string) => {
 
   const { resources } = await container.items
     .query<ChatMessageModel>(querySpec)
-    .fetchAll();
+    .fetchAll();*/
 
   return resources;
 };
 
-export const UpsertChat = async (chatModel: ChatMessageModel) => {
-  const modelToSave: ChatMessageModel = {
+export const UpsertChat = async (chatModel: ChatMessage) => {
+  const modelToSave: ChatMessage = {
     ...chatModel,
     id: nanoid(),
     createdAt: new Date(),
@@ -45,7 +54,17 @@ export const UpsertChat = async (chatModel: ChatMessageModel) => {
   };
 
   const container = await initDBContainer();
-  await container.items.upsert(modelToSave);
+  await container.chatMessage.upsert({
+    where: {
+      id: chatModel.id,
+    },
+    update: {
+      ...modelToSave,
+    },
+    create: {
+      ...modelToSave,
+    },
+  });
 };
 
 export const insertPromptAndResponse = async (
@@ -53,6 +72,7 @@ export const insertPromptAndResponse = async (
   userQuestion: string,
   assistantResponse: string
 ) => {
+  console.log("assistantResponse", assistantResponse);
   await UpsertChat({
     ...newChatModel(),
     content: userQuestion,

@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Document {
+  id            String                 @id
+  chatThreadId  String
+  user          String
+  pageContent   String
+  metadata      String
+  vector        Unsupported("vector")?
+}
+
+model ChatDocument {
+  id           String            @id
+  name         String
+  chatThreadId String
+  userId       String
+  isDeleted    Boolean
+  createdAt    DateTime
+  type         String
+}
+
+model ChatThread {
+  id                  String     @id
+  name                String
+  model               String
+  createdAt           DateTime
+  userId              String
+  userName            String     @default("user")
+  isDeleted           Boolean
+  chatType            String
+  conversationStyle   String
+  type                String
+}
+
+model ChatMessage {
+  id           String     @id 
+  createdAt    DateTime
+  isDeleted    Boolean
+  threadId     String
+  userId       String
+  content      String
+  role         String
+  type         String
+}

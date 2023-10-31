@@ -79,15 +79,19 @@ export class AzureCogSearch<
   async addDocuments(documents: Document<TModel>[]): Promise<string[]> {
     console.log("addDocuments start", documents);
     const texts = documents.map(({ pageContent }) => pageContent);
-    console.log("Texts", texts);
-    console.log(
-      "this.embeddings",
-      this.embeddings,
-      this.embeddings.embedDocuments
+    //console.log("Texts", texts);
+    const no_nl_texts = texts.map((t) => t.replace("\n/g", " "));
+    console.log("Texts", no_nl_texts);
+    console.log("this.embeddings", this.embeddings);
+
+    /*let vectors = await this.addVectors(
+      await this.embeddings.embedDocuments(texts),
+      documents
     );
+    return vectors;*/
 
     let vectors = await this.addVectors(
-      await this.embeddings.embedDocuments(texts),
+      await this.embeddings.embedDocuments(no_nl_texts),
       documents
     );
     return vectors;

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Document" ALTER COLUMN "metadata" SET NOT NULL,
+ALTER COLUMN "metadata" SET DATA TYPE TEXT;

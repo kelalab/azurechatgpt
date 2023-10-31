@@ -10,7 +10,7 @@ import {
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate,
 } from "langchain/prompts";
-import { AzureCogSearch } from "../../langchain/vector-stores/azure-cog-search/azure-cog-vector-store";
+import { PgVectorSearch } from "../../langchain/vector-stores/pgvector/pgvector-store";
 import { insertPromptAndResponse } from "../chat-services/chat-service";
 import { initAndGuardChatSession } from "../chat-services/chat-thread-service";
 import { FaqDocumentIndex, PromptGPTProps } from "../chat-services/models";
@@ -21,6 +21,8 @@ export const ChatData = async (props: PromptGPTProps) => {
     props
   );
 
+  console.log("chatThread", chatThread);
+
   const chatModel = new ChatOpenAI({
     temperature: transformConversationStyleToTemperature(
       chatThread.conversationStyle
@@ -28,8 +30,16 @@ export const ChatData = async (props: PromptGPTProps) => {
     streaming: true,
   });
 
+  //TODO: synonym rules here
+  const _lastHumanMessage = lastHumanMessage.content.replace(
+    /totu/g,
+    "toimeentulotuki"
+  );
+  console.log(_lastHumanMessage);
+
   const relevantDocuments = await findRelevantDocuments(
-    lastHumanMessage.content,
+    //lastHumanMessage.content,
+    _lastHumanMessage,
     id
   );
 
@@ -39,7 +49,8 @@ export const ChatData = async (props: PromptGPTProps) => {
 
   const { stream, handlers } = LangChainStream({
     onCompletion: async (completion: string) => {
-      await insertPromptAndResponse(id, lastHumanMessage.content, completion);
+      //await insertPromptAndResponse(id, lastHumanMessage.content, completion);
+      await insertPromptAndResponse(id, _lastHumanMessage, completion);
     },
   });
 
@@ -58,7 +69,8 @@ export const ChatData = async (props: PromptGPTProps) => {
   chain.call(
     {
       input_documents: relevantDocuments,
-      question: lastHumanMessage.content,
+      //question: lastHumanMessage.content,
+      question: _lastHumanMessage,
       memory: memory,
     },
     [handlers]
@@ -72,17 +84,24 @@ const findRelevantDocuments = async (query: string, chatThreadId: string) => {
 
   const relevantDocuments = await vectorStore.similaritySearch(query, 10, {
     vectorFields: vectorStore.config.vectorFieldName,
-    filter: `user eq '${await userHashedId()}' and chatThreadId eq '${chatThreadId}'`,
+    filter: { user: await userHashedId(), chatThreadId: chatThreadId },
+    //filter: `user eq '${await userHashedId()}' and chatThreadId eq '${chatThreadId}'`,
   });
+
+  console.log("relevantDocuments", relevantDocuments);
 
   return relevantDocuments;
 };
 
 const defineSystemPrompt = () => {
-  const system_combine_template = `Given the following context and a question, create a final answer. 
-  If the context is empty or If you don't know the answer, politely decline to answer the question. Don't try to make up an answer.
+  //const system_combine_template = `Given the following context and a question, create a final answer.
+  //If the context is empty or If you don't know the answer, politely decline to answer the question. Don't try to make up an answer.
+  //----------------
+  //context: {summaries}`;
+  const system_combine_template = `Anna lopullinen vastaus seuraavan kontekstin ja kysymyksen pohjalta. 
+  Jos konteksti on tyhjä tai et tiedä vastausta, kieltäydy kohteliaasti vastaamasta kysymykseen. Älä yritä keksiä vastausta.
   ----------------
-  context: {summaries}`;
+  konteksti: {summaries}`;
 
   const combine_messages = [
     SystemMessagePromptTemplate.fromTemplate(system_combine_template),
@@ -96,12 +115,10 @@ const defineSystemPrompt = () => {
 
 const initVectorStore = () => {
   const embedding = new OpenAIEmbeddings();
-  const azureSearch = new AzureCogSearch<FaqDocumentIndex>(embedding, {
+  const azureSearch = new PgVectorSearch<FaqDocumentIndex>(embedding, {
     name: process.env.AZURE_SEARCH_NAME,
     indexName: process.env.AZURE_SEARCH_INDEX_NAME,
-    apiKey: process.env.AZURE_SEARCH_API_KEY,
-    apiVersion: process.env.AZURE_SEARCH_API_VERSION,
-    vectorFieldName: "embedding",
+    vectorFieldName: "vector",
   });
 
   return azureSearch;
