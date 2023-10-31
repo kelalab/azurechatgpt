@@ -6,3 +6,4 @@ backend/output
 backend/output_lc
 backend/*.dita
 backend/env.py
+backend/*.zip
