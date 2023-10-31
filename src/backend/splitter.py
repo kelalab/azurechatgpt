@@ -12,7 +12,8 @@ alphabets=['-','a','b','c','d','e','f','g','h','i','j','k','l','m',
 
 def main(argv):
   print('running main')
-  shutil.rmtree('output')
+  if os.path.exists('output'):
+      shutil.rmtree('output')
 
   #os.removedirs('output')
   os.makedirs('output', exist_ok=True)
@@ -137,7 +138,8 @@ def main(argv):
         texts = text_splitter.split_text(f.read())
         #texts = text_splitter.create_documents([f.read()])
         f.close()
-        shutil.rmtree('output_lc')
+        if(os.path.exists('output_lc')):
+            shutil.rmtree('output_lc')
         #os.removedirs('output_lc')
         os.makedirs('output_lc', exist_ok=True)
         lc_idx = 0
