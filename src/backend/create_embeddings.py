@@ -15,6 +15,7 @@ import sys, getopt, re
 import os
 from models import Document
 from langchain.document_loaders import JSONLoader
+import env
 
 token_limit_per_minute = 180000
 short_limit = 40000
@@ -26,27 +27,30 @@ conn = psycopg2.connect(
    host="localhost"
 )
 
-#ENV
-AZURE_OPENAI_API_INSTANCE_NAME="oai-services-swe"
-AZURE_OPENAI_API_KEY="8dd2a0d79b6d402f8827af49ea3b45ff"
-AZURE_OPENAI_API_DEPLOYMENT_NAME="gpt-4-32k"
-AZURE_OPENAI_API_VERSION="2023-06-01-preview"
-#AZURE_OPENAI_API_EMBEDDINGS_DEPLOYMENT_NAME=text-embedding-ada-002
-#USER_ROLE=dcd87d3a-c73b-4a8d-8a43-eae91cbc8383
-
-openai.api_key = AZURE_OPENAI_API_KEY
-openai.api_base = "https://" + AZURE_OPENAI_API_INSTANCE_NAME + ".openai.azure.com" # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
+openai.api_key = env.AZURE_OPENAI_API_KEY
+openai.api_base = "https://" + env.AZURE_OPENAI_API_INSTANCE_NAME + ".openai.azure.com" # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
 openai.api_type = 'azure'
-openai.api_version = AZURE_OPENAI_API_VERSION
+openai.api_version = env.AZURE_OPENAI_API_VERSION
 
 cur = conn.cursor()
-   
+
+def my_get_embedding(text: str, progress: int,model="text-embedding-ada-002"):
+   text = text.replace("\n", " ")
+   while True:
+      try:
+         embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
+         break
+      except openai.error.RateLimitError as e:
+         print('retrying...', progress, e)
+         time.sleep(1)
+   return embedding
+
 def get_embedding(text: str, progress: int,model="text-embedding-ada-002"):
    text = text.replace("\n", " ")
    try:
      embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
-   except openai.error.RateLimitError:
-     print('retrying...', progress)
+   except openai.error.RateLimitError as e:
+     print('retrying...', progress, e)
      time.sleep(1)
      return get_embedding(text, progress, model)
    return embedding
@@ -253,7 +257,8 @@ def create_lc_embeddings(filename='output_lc'):
      write_to_db(df_new, "clause_embeddings")
   else:
      print('input is a file')
-def main():
+
+if __name__ == "__main__":
    """Read from args if we are doing paragraph or clause-based embeddings"""
    opts, args = getopt.getopt(sys.argv[1:], "cl", [])
    for opt, arg in opts:
@@ -264,6 +269,3 @@ def main():
          create_lc_embeddings()
          sys.exit()
    create_paragraph_embeddings()
-
-if __name__ == "__main__":
-  main()
