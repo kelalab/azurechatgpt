@@ -81,7 +81,6 @@ def estimate_cost(zip_ref):
       tkn_count += num_tokens_from_string(data)
     print('estimated cost: ', get_embedding_cost(tkn_count))
 
-
 def create_paragraph_embeddings():
    with zipfile.ZipFile('output_bk.zip', 'r') as zip_ref:
    # Returns a string with the contents of the in-memory zip.
