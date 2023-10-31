@@ -1,100 +1,46 @@
-### Indeksi
+## Running postgres
 
-```JSON
-    {
-    "name": "gpt4-clone",
-    "fields": [
-    {
-      "name": "id",
-      "type": "Edm.String",
-      "searchable": false,
-      "filterable": false,
-      "retrievable": true,
-      "sortable": false,
-      "facetable": false,
-      "key": true,
-      "synonymMaps": []
-    },
-    {
-      "name": "chatThreadId",
-      "type": "Edm.String",
-      "searchable": true,
-      "filterable": true,
-      "retrievable": true,
-      "sortable": false,
-      "facetable": false,
-      "key": false,
-      "analyzer": "standard.lucene",
-      "synonymMaps": []
-    },
-    {
-      "name": "user",
-      "type": "Edm.String",
-      "searchable": false,
-      "filterable": true,
-      "retrievable": true,
-      "sortable": false,
-      "facetable": false,
-      "key": false,
-      "synonymMaps": []
-    },
-    {
-      "name": "pageContent",
-      "type": "Edm.String",
-      "searchable": true,
-      "filterable": false,
-      "retrievable": true,
-      "sortable": false,
-      "facetable": false,
-      "key": false,
-      "analyzer": "standard.lucene",
-      "synonymMaps": []
-    },
-    {
-      "name": "metadata",
-      "type": "Edm.String",
-      "searchable": false,
-      "filterable": false,
-      "retrievable": true,
-      "sortable": false,
-      "facetable": false,
-      "key": false,
-      "synonymMaps": []
-    },
-    {
-      "name": "embedding",
-      "type": "Collection(Edm.Single)",
-      "searchable": true,
-      "filterable": false,
-      "retrievable": true,
-      "sortable": false,
-      "facetable": false,
-      "key": false,
-      "dimensions": 1536,
-      "vectorSearchConfiguration": "vector-config-test",
-      "synonymMaps": []
-    }
-  ],
-  "scoringProfiles": [],
-  "suggesters": [],
-  "analyzers": [],
-  "normalizers": [],
-  "tokenizers": [],
-  "tokenFilters": [],
-  "charFilters": [],
-  "vectorSearch": {
-    "algorithmConfigurations": [
-      {
-        "name": "vector-config-test",
-        "kind": "hnsw",
-        "hnswParameters": {
-          "metric": "cosine",
-          "m": 4,
-          "efConstruction": 400,
-          "efSearch": 500
-        }
-      }
-    ]
-  }
-}
+```
+docker compose -f pgvector.yaml up
+```
+
+or
+
+```
+npm run localdb
+```
+
+## Running python REST-api
+
+```
+cd backend
+uvicorn main:app --reload
+```
+
+### Create tables for python
+
+Run both lines to compare diy and langchain split or just the second command for langchain
+
+```
+cd backend
+python3 create_table.py
+python3 create_table.py -n clause_embeddings
+```
+
+### Prep data
+
+This processes the input xml file to a markdown document and then uses either diy or lanchain to split the data into chunks.
+
+Langchain:
+
+```
+python3 splitter.py -i <name>.dita -l -sFalse
+```
+
+### Create embeddings
+
+This calls openai ada002 model to create embedding vectors for our data and stores them in db.
+
+```
+python3 create_embeddings.py -l
 ```
