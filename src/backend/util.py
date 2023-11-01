@@ -1,7 +1,7 @@
 import tiktoken
 
-def num_tokens_from_string(string: str, encoding_name = "cl100k_base") -> int:
-    """Helper func: calculate number of tokens
+def num_tokens_from_string(string: str, encoding_name = 'cl100k_base') -> int:
+    '''Helper func: calculate number of tokens
      
        Parameters
        ----------
@@ -10,7 +10,7 @@ def num_tokens_from_string(string: str, encoding_name = "cl100k_base") -> int:
        encoding_name: str  
            defaults to cl100k_base
 
-    """
+    '''
     if not string:
         return 0
     # Returns the number of tokens in a text string

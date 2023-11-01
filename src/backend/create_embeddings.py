@@ -21,21 +21,21 @@ token_limit_per_minute = 180000
 short_limit = 40000
 
 conn = psycopg2.connect(
-   database="embeddings",
-   user="pgvector",
-   password="hassusalakala",
-   host="localhost"
+   database='embeddings',
+   user='pgvector',
+   password='hassusalakala',
+   host='localhost'
 )
 
 openai.api_key = env.AZURE_OPENAI_API_KEY
-openai.api_base = "https://" + env.AZURE_OPENAI_API_INSTANCE_NAME + ".openai.azure.com" # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
+openai.api_base = 'https://' + env.AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com' # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
 openai.api_type = 'azure'
 openai.api_version = env.AZURE_OPENAI_API_VERSION
 
 cur = conn.cursor()
 
-def my_get_embedding(text: str, progress: int,model="text-embedding-ada-002"):
-   text = text.replace("\n", " ")
+def my_get_embedding(text: str, progress: int,model='text-embedding-ada-002'):
+   text = text.replace('\n', ' ')
    while True:
       try:
          embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
@@ -45,8 +45,8 @@ def my_get_embedding(text: str, progress: int,model="text-embedding-ada-002"):
          time.sleep(1)
    return embedding
 
-def get_embedding(text: str, progress: int,model="text-embedding-ada-002"):
-   text = text.replace("\n", " ")
+def get_embedding(text: str, progress: int,model='text-embedding-ada-002'):
+   text = text.replace('\n', ' ')
    try:
      embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
    except openai.error.RateLimitError as e:
@@ -56,7 +56,7 @@ def get_embedding(text: str, progress: int,model="text-embedding-ada-002"):
    return embedding
    
 # Helper func: calculate number of tokens
-def num_tokens_from_string(string: str, encoding_name = "cl100k_base") -> int:
+def num_tokens_from_string(string: str, encoding_name = 'cl100k_base') -> int:
     if not string:
         return 0
     # Returns the number of tokens in a text string
@@ -67,21 +67,21 @@ def num_tokens_from_string(string: str, encoding_name = "cl100k_base") -> int:
 def get_embedding_cost(num_tokens):
     return num_tokens/1000*0.000096
 
-def write_to_db(df_new, table="embeddings"):
+def write_to_db(df_new, table='embeddings'):
    #Batch insert embeddings and metadata from dataframe into PostgreSQL database
    register_vector(conn)
    cur = conn.cursor()
    # Prepare the list of tuples to insert
-   data_list = [(row['id'], row['chatThreadId'], row['userId'] or "", row['pageContent'], row['metadata'], np.array(row['vector'])) for index, row in df_new.iterrows()]
+   data_list = [(row['id'], row['chatThreadId'], row['userId'] or '', row['pageContent'], row['metadata'], np.array(row['vector'])) for index, row in df_new.iterrows()]
    # Use execute_values to perform batch insertion
-   execute_values(cur, "INSERT INTO " + table + " (id, chatthreadid, userid, pagecontent, metadata, vector) VALUES %s", data_list)
+   execute_values(cur, 'INSERT INTO ' + table + ' (id, chatthreadid, userid, pagecontent, metadata, vector) VALUES %s', data_list)
    # Commit after we insert all embeddings
    conn.commit()
 
 def estimate_cost(zip_ref):
     tkn_count = 0
     for name in zip_ref.namelist():
-      data = str(zip_ref.read(name), "utf-8")
+      data = str(zip_ref.read(name), 'utf-8')
       tkn_count += num_tokens_from_string(data)
     print('estimated cost: ', get_embedding_cost(tkn_count))
 
@@ -97,7 +97,7 @@ def create_paragraph_embeddings():
       time.sleep(10) 
       idx=0
       for name in zip_ref.namelist():
-         data = str(zip_ref.read(name), "utf-8")
+         data = str(zip_ref.read(name), 'utf-8')
          #print('name', name, 'data', data, 'usage', usage)
          print('usage', usage)
          if usage>token_limit_per_minute or usage > short_limit*short_limit_passes:
@@ -117,7 +117,7 @@ def create_paragraph_embeddings():
          embedding = get_embedding(data, idx)
          id = str(uuid.uuid4()).replace('-','')
          obj = Document()
-         obj.metadata = "title="+name
+         obj.metadata = 'title='+name
          obj.pageContent = data
          obj.vector = embedding['data'][0]['embedding']
          obj.id = id
@@ -143,8 +143,8 @@ def create_clause_embeddings():
       estimate_cost(zip_ref)
       time.sleep(10) 
       for name in zip_ref.namelist():
-         data = str(zip_ref.read(name), "utf-8")
-         #data = re.sub(r'\r\n', " ", data)
+         data = str(zip_ref.read(name), 'utf-8')
+         #data = re.sub(r'\r\n', ' ', data)
          data = re.split(r'\r\n', data)
          clause_data = []
          for c in data:
@@ -192,7 +192,7 @@ def create_clause_embeddings():
             embedding = get_embedding(c)
             id = str(uuid.uuid4()).replace('-','')
             obj = Document()
-            obj.metadata = "file="+name
+            obj.metadata = 'file='+name
             obj.pageContent = c
             obj.vector = embedding['data'][0]['embedding']
             obj.id = id
@@ -204,22 +204,22 @@ def create_clause_embeddings():
             usage += embedding['usage']['total_tokens']
       df_new = pd.DataFrame.from_dict(embedded_data, orient='index', columns=['id', 'chatThreadId', 'userId', 'pageContent', 'metadata', 'vector'])
       #print(df_new)
-      write_to_db(df_new, "clause_embeddings")
+      write_to_db(df_new, 'clause_embeddings')
 
 def metadata_func(record: dict, metadata: dict) -> dict:
-   """This function ensures necessary metadata is in our final Document"""
+   '''This function ensures necessary metadata is in our final Document'''
    #print(list(record.get(metadata)))
-   if record.get("metadata").get("start_index"):
-     metadata["start_index"] = record.get("metadata").get("start_index")
-   #metadata["source"] = record.get("source").split("/")[-1]
-   metadata["Header 1"] = record.get("metadata").get("Header 1")
-   metadata["Header 2"] = record.get("metadata").get("Header 2")
-   if record.get("metadata").get("Header 3"):
-     metadata["Header 3"] = record.get("metadata").get("Header 3")
-   if record.get("metadata").get("Header 4"):
-     metadata["Header 4"] = record.get("metadata").get("Header 4")
-   if record.get("metadata").get("Header 5"):
-     metadata["Header 5"] = record.get("metadata").get("Header 5")
+   if record.get('metadata').get('start_index'):
+     metadata['start_index'] = record.get('metadata').get('start_index')
+   #metadata['source'] = record.get('source').split('/')[-1]
+   metadata['Header 1'] = record.get('metadata').get('Header 1')
+   metadata['Header 2'] = record.get('metadata').get('Header 2')
+   if record.get('metadata').get('Header 3'):
+     metadata['Header 3'] = record.get('metadata').get('Header 3')
+   if record.get('metadata').get('Header 4'):
+     metadata['Header 4'] = record.get('metadata').get('Header 4')
+   if record.get('metadata').get('Header 5'):
+     metadata['Header 5'] = record.get('metadata').get('Header 5')
    return metadata
 
 def create_lc_embeddings(filename='output_lc'):
@@ -234,7 +234,7 @@ def create_lc_embeddings(filename='output_lc'):
      for f in files:
         #print(f)
         loader = JSONLoader(
-           file_path=f"{filename}/{f}",
+           file_path=f'{filename}/{f}',
            jq_schema='.',
            content_key='page_content',
            metadata_func=metadata_func,
@@ -242,7 +242,7 @@ def create_lc_embeddings(filename='output_lc'):
         )
         doc = loader.load()[0]
         # Remove full path from source file
-        doc.metadata["source"] = doc.metadata["source"].split("/")[-1]
+        doc.metadata['source'] = doc.metadata['source'].split('/')[-1]
         # Pass everything to our document wrapper class
         doc = Document(pageContent=doc.page_content, metadata=str(doc.metadata))
         #print(doc)
@@ -254,13 +254,13 @@ def create_lc_embeddings(filename='output_lc'):
         usage += embedding['usage']['total_tokens']
         idx += 1
      df_new = pd.DataFrame.from_dict(embedded_data, orient='index', columns=['id', 'chatThreadId', 'userId', 'pageContent', 'metadata', 'vector'])
-     write_to_db(df_new, "clause_embeddings")
+     write_to_db(df_new, 'clause_embeddings')
   else:
      print('input is a file')
 
-if __name__ == "__main__":
-   """Read from args if we are doing paragraph or clause-based embeddings"""
-   opts, args = getopt.getopt(sys.argv[1:], "cl", [])
+if __name__ == '__main__':
+   '''Read from args if we are doing paragraph or clause-based embeddings'''
+   opts, args = getopt.getopt(sys.argv[1:], 'cl', [])
    for opt, arg in opts:
       if opt == '-c':
          create_clause_embeddings()
