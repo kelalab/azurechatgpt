@@ -34,3 +34,5 @@ src/backend/env.py
 
 # data
 *.dita
+
+__pycache__

@@ -1,5 +1,11 @@
 {
     "githubPullRequests.ignoredPullRequestBranches": [
         "main"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8",
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4  
+    }
 }
+

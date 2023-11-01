@@ -1,6 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile
 from chat_completion import process_input_with_retrieval, get_completion_from_messages
-
+from add_document.file_embeddings import FileEmbeddings
 app = FastAPI()
 
 @app.get('/')
@@ -20,3 +20,9 @@ async def post_messages(messages: list[str]):
    # and then check what the completion returns and what we need to pass back in the response to continue with the conversation
    response = get_completion_from_messages(messages)
    return {'response': response.message, 'cost': response.cost, 'sources': response.sources}
+
+@app.post('/add_document')
+async def add_document(etuus: str, file: UploadFile):
+   content = await file.read()
+   fe = FileEmbeddings(file.filename, content)
+   return fe.generate_embeddings(etuus)
