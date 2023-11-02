@@ -14,7 +14,7 @@ app = FastAPI()
 async def post_message(benefit:str, message: str):
     '''Function for sending a single message to openai'''
     response = process_input_with_retrieval(benefit, message)
-    return {'response': response.message, 'cost': response.cost, 'sources': response.sources}
+    return {'response': response.response, 'messages':response.messages}
 
 @app.post('/messages')
 async def post_messages(messages: list[str]):
@@ -22,7 +22,7 @@ async def post_messages(messages: list[str]):
     #TODO: this method is untested and unfinished, need to begin with getting the message chain in the response from the initial message
     # and then check what the completion returns and what we need to pass back in the response to continue with the conversation
     response = get_completion_from_messages(messages)
-    return {'response': response.message, 'cost': response.cost, 'sources': response.sources}
+    return {'response': response.response, 'messages':response.messages}
 
 @app.post('/add_document')
 async def add_document(benefit: str, file: UploadFile):

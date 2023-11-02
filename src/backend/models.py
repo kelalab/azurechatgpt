@@ -15,12 +15,21 @@ class Document:
 
     def __str__(self):
         return f'{self.metadata}({self.pageContent}, {self.vector})'
-   
+
+class _Response:
+    message=''
+    cost=0
+    sources=[]
+ 
 class Response:
-    def __init__(self, message, cost, sources = list()):
-        self.message = message
-        self.cost = cost
-        self.sources = sources
+    response:_Response
+    messages: []
+    def __init__(self, message, cost, sources = list(), messages = list()):
+        self.response = _Response()
+        self.response.message = message
+        self.response.cost = cost
+        self.response.sources = sources
+        self.messages = messages
    
     def __str__(self):
-        return f'{self.message},{self.cost},{self.sources}'
+        return f'{self.response.message},{self.response.cost},{self.response.sources}'
