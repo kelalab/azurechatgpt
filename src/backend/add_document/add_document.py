@@ -19,6 +19,6 @@ class AddDocument:
             page_content = text.page_content
             em = self.embed.embed(text.page_content)
             vector = em.data[0].embedding
-            self.repo.insert(Document(metadata,page_content, vector))
+            self.repo.insert(Document(metadata, page_content, vector, etuus))
             
         return {'response': 'ok'}

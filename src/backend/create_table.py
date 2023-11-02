@@ -18,7 +18,8 @@ def create_table(name='embeddings'):
                userId text,
                pageContent text,
                metadata text,
-               vector vector(1536)
+               vector vector(1536),
+               etuus text
                );
                '''
    cur.execute(table_create_command)

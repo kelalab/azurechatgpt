@@ -15,10 +15,10 @@ from util import num_tokens_from_string
 from env import AZURE_OPENAI_API_DEPLOYMENT_NAME, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_KEY, AZURE_OPENAI_API_VERSION
 
 conn = psycopg2.connect(
-   database='embeddings',
-   user='pgvector',
-   password='hassusalakala',
-   host='localhost'
+    database='embeddings',
+    user='pgvector',
+    password='hassusalakala',
+    host='localhost'
 )
 
 GPT35PROMPTPER1KTKN = 0.003
@@ -46,18 +46,19 @@ token_limit_per_minute = 180000
 short_limit = 40000
 
 def get_embedding(text:str, model='text-embedding-ada-002'):
-   print('text', text)
-   text = text.replace('\n', ' ')
-   try:
-     embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
-   except openai.error.RateLimitError:
-     print('retrying...')
-     time.sleep(1)
-     return get_embedding(text)
-   return embedding
+    while True:
+        print('text', text)
+        text = text.replace('\n', ' ')
+        try:
+            embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
+            break
+        except openai.error.RateLimitError:
+            print('retrying...')
+            time.sleep(1)
+    return embedding
 
 # Helper function: Get most similar documents from the database
-def get_top3_similar_docs(query_embedding, conn):
+def get_top3_similar_docs(etuus, query_embedding, conn):
     ''' Finds the three closest documents from the database based on K Nearest Neighbor vector comparison algorithm
     
     Parameters
@@ -77,7 +78,7 @@ def get_top3_similar_docs(query_embedding, conn):
     # Get the top 3 most similar documents using the KNN <=> operator
     #cur.execute('SELECT pageContent,metadata,vector <=> %s AS distance FROM embeddings ORDER BY vector <=> %s LIMIT 3', (embedding_array,embedding_array,))
     
-    cur.execute('SELECT pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings ORDER BY vector <=> %s LIMIT 6', (embedding_array,embedding_array,))
+    cur.execute('SELECT pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings WHERE etuus = \'' + etuus + '\' ORDER BY vector <=> %s LIMIT 6', (embedding_array,embedding_array,))
 
     top3_docs = cur.fetchall()
     return top3_docs
@@ -98,17 +99,17 @@ def get_completion_from_messages(messages, model=AZURE_OPENAI_API_DEPLOYMENT_NAM
     #return 'message': response.choices[0].message['content'], 'cost': cost
     return Response(response.choices[0].message['content'],cost)
 
-def process_input_with_retrieval(user_input, add_guidance = True):
+def process_input_with_retrieval(etuus, user_input, add_guidance = True):
     delimiter = '```'
 
     #Step 1: Get documents related to the user input from database
-    related_docs = get_top3_similar_docs(get_embedding(user_input)['data'][0]['embedding'], conn)
+    related_docs = get_top3_similar_docs(etuus, get_embedding(user_input)['data'][0]['embedding'], conn)
     print('related_docs before filter', related_docs)
     related_docs = list(filter(lambda x: x[2]<distance_limit,related_docs))
     print('related_docs', related_docs)
     content = ''
     for rl in related_docs:
-       content += re.sub(r'\n', ' ',rl[0])
+        content += re.sub(r'\n', ' ',rl[0])
     #TODO: siivoa dokumentit
 
     if add_guidance:    
@@ -122,7 +123,7 @@ def process_input_with_retrieval(user_input, add_guidance = True):
         Perustelut löytyvät tästä tekstistä: ### {content} ###
         '''
     else:
-       system_message = user_input
+        system_message = user_input
     
     system_message = re.sub(r'\n', ' ', system_message)
     #    
