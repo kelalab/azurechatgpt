@@ -19,7 +19,7 @@ def create_table(name='embeddings'):
         pageContent text,
         metadata text,
         vector vector(1536),
-        etuus text
+        benefit text
         );
         '''
     cur.execute(table_create_command)

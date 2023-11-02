@@ -24,8 +24,8 @@ class Repository:
 
     def insert(self, document: Document, table = 'clause_embeddings'):
         cur = self.conn.cursor()
-        execute_values(cur, 'INSERT INTO ' + table + ' (id, chatthreadid, userid, pagecontent, metadata, vector, etuus) VALUES %s', self.extract_arguments(document))
+        execute_values(cur, 'INSERT INTO ' + table + ' (id, chatthreadid, userid, pagecontent, metadata, vector, benefit) VALUES %s', self.extract_arguments(document))
         self.conn.commit()
 
     def extract_arguments(self, document: Document):
-        return [[str(uuid.uuid4()).replace('-',''), document.chatthreadid, document.userid, document.pageContent, document.metadata, document.vector, document.etuus]]
+        return [[str(uuid.uuid4()).replace('-',''), document.chatthreadid, document.userid, document.pageContent, document.metadata, document.vector, document.benefit]]

@@ -11,7 +11,7 @@ class AddDocument:
         self.file_name = file_name
         self.content = io.BytesIO(content)
 
-    def generate_embeddings(self, etuus):
+    def generate_embeddings(self, benefit):
         texts = Splitter().split(self.content)
 
         for text in texts:
@@ -19,6 +19,6 @@ class AddDocument:
             page_content = text.page_content
             em = self.embed.embed(text.page_content)
             vector = em.data[0].embedding
-            self.repo.insert(Document(metadata, page_content, vector, etuus))
+            self.repo.insert(Document(metadata, page_content, vector, benefit))
             
         return {'response': 'ok'}

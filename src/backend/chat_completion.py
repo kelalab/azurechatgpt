@@ -58,7 +58,7 @@ def get_embedding(text:str, model='text-embedding-ada-002'):
     return embedding
 
 # Helper function: Get most similar documents from the database
-def get_top3_similar_docs(etuus, query_embedding, conn):
+def get_top3_similar_docs(benefit, query_embedding, conn):
     ''' Finds the three closest documents from the database based on K Nearest Neighbor vector comparison algorithm
     
     Parameters
@@ -78,7 +78,7 @@ def get_top3_similar_docs(etuus, query_embedding, conn):
     # Get the top 3 most similar documents using the KNN <=> operator
     #cur.execute('SELECT pageContent,metadata,vector <=> %s AS distance FROM embeddings ORDER BY vector <=> %s LIMIT 3', (embedding_array,embedding_array,))
     
-    cur.execute('SELECT pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings WHERE etuus = \'' + etuus + '\' ORDER BY vector <=> %s LIMIT 6', (embedding_array,embedding_array,))
+    cur.execute('SELECT pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings WHERE benefit = \'' + benefit + '\' ORDER BY vector <=> %s LIMIT 6', (embedding_array,embedding_array,))
 
     top3_docs = cur.fetchall()
     return top3_docs
@@ -99,11 +99,11 @@ def get_completion_from_messages(messages, model=AZURE_OPENAI_API_DEPLOYMENT_NAM
     #return 'message': response.choices[0].message['content'], 'cost': cost
     return Response(response.choices[0].message['content'],cost)
 
-def process_input_with_retrieval(etuus, user_input, add_guidance = True):
+def process_input_with_retrieval(benefit, user_input, add_guidance = True):
     delimiter = '```'
 
     #Step 1: Get documents related to the user input from database
-    related_docs = get_top3_similar_docs(etuus, get_embedding(user_input)['data'][0]['embedding'], conn)
+    related_docs = get_top3_similar_docs(benefit, get_embedding(user_input)['data'][0]['embedding'], conn)
     print('related_docs before filter', related_docs)
     related_docs = list(filter(lambda x: x[2]<distance_limit,related_docs))
     print('related_docs', related_docs)

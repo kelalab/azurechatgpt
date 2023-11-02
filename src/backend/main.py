@@ -8,9 +8,9 @@ async def root():
     return {'message': 'Hello World'}
 
 @app.post('/message')
-async def post_message(etuus:str, message: str):
+async def post_message(benefit:str, message: str):
     '''Function for sending a single message to openai'''
-    response = process_input_with_retrieval(etuus, message)
+    response = process_input_with_retrieval(benefit, message)
     return {'response': response.message, 'cost': response.cost, 'sources': response.sources}
 
 @app.post('/messages')
@@ -22,7 +22,7 @@ async def post_messages(messages: list[str]):
     return {'response': response.message, 'cost': response.cost, 'sources': response.sources}
 
 @app.post('/add_document')
-async def add_document(etuus: str, file: UploadFile):
+async def add_document(benefit: str, file: UploadFile):
     content = await file.read()
     ad = AddDocument(file.filename, content)
-    return ad.generate_embeddings(etuus)
+    return ad.generate_embeddings(benefit)
