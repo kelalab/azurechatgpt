@@ -13,8 +13,7 @@ from psycopg2.extras import execute_values
 from models import Document, Response
 import re
 from util import num_tokens_from_string
-from constants import DB_HOST
-from env import AZURE_OPENAI_API_DEPLOYMENT_NAME, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_KEY, AZURE_OPENAI_API_VERSION
+from constants import DB_HOST, AZURE_OPENAI_API_DEPLOYMENT_NAME, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_API_KEY
 
 conn = psycopg2.connect(
     database='embeddings',

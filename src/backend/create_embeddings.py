@@ -15,7 +15,7 @@ import sys, getopt, re
 import os
 from models import Document
 from langchain.document_loaders import JSONLoader
-import env
+from constants import AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_API_KEY
 
 token_limit_per_minute = 180000
 short_limit = 40000
@@ -29,10 +29,10 @@ conn = psycopg2.connect(
     host=db_host
 )
 
-openai.api_key = env.AZURE_OPENAI_API_KEY
-openai.api_base = 'https://' + env.AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com' # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
+openai.api_key = AZURE_OPENAI_API_KEY
+openai.api_base = 'https://' + AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com' # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
 openai.api_type = 'azure'
-openai.api_version = env.AZURE_OPENAI_API_VERSION
+openai.api_version = AZURE_OPENAI_API_VERSION
 
 cur = conn.cursor()
 
