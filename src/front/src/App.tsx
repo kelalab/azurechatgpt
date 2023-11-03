@@ -5,7 +5,7 @@ import TopBar from "./components/Layout/TopBar";
 
 const App = () => {
   return (
-    <div className="w-full h-full p-2 items-center flex flex-col bg-slate-950">
+    <div className="w-full h-full p-2 items-center flex flex-col bg-slate-950 overflow-hidden">
       <TopBar icon="ai-icon.png" title="Selittäjä">
         <div className="p-2">
           <label className="text-white mr-4">Valitse etuus:</label>

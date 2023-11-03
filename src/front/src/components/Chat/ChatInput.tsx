@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Message } from "../../types";
 
 const func = (json_msgs: Message[]) => {
@@ -20,7 +20,15 @@ const ChatInput = (props: any) => {
   const { addMessage, resetMessages, setAllMessages, messages } = props;
   const [input, setInput] = useState("");
   const [benefit, setBenefit] = useState("Toimeentulotuki");
-  //const [messages, setMessages] = useState([]);
+
+  const scrollToLast = () => {
+    const chat_history = document.querySelector("#chat-history");
+    console.log(chat_history);
+    const last = chat_history?.lastChild;
+    console.log("last", last);
+    last?.scrollIntoView();
+  };
+
   const sendMessage = async (message: string) => {
     console.log("sendMessage", message);
     if (messages.length === 0) {
@@ -95,11 +103,24 @@ const ChatInput = (props: any) => {
       setInput("");
     }
   };
+
+  useEffect(() => {
+    scrollToLast();
+  }, [messages]);
+
+  const handleKey = (keyboardEvent: KeyboardEvent) => {
+    console.log("key input", keyboardEvent.key);
+    if (keyboardEvent.key == "Enter") {
+      sendMessage(input);
+    }
+  };
+
   return (
     <div className="flex p-2 border-2 rounded-lg">
       <input
         className="flex-1 bg-slate-950 text-white"
         onChange={(e) => setInput(e.currentTarget.value)}
+        onKeyUp={handleKey}
         value={input}
       />
       <button

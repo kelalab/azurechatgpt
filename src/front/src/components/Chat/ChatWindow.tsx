@@ -21,7 +21,7 @@ const ChatWindow = (props: any) => {
   };
 
   return (
-    <div className="w-4/5 h-full gap-4 flex flex-col justify-between">
+    <div className="w-4/5 h-full gap-4 flex flex-col justify-between overflow-hidden">
       <ChatHistory messages={messages} />
       <ChatInput
         addMessage={addMessage}

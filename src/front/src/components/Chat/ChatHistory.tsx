@@ -40,7 +40,10 @@ const ChatHistory = (props: any) => {
   const messages = props.messages;
   console.log("messages: ", messages);
   return (
-    <div className="flex flex-col gap-4 overflow-y-auto">
+    <div
+      id="chat-history"
+      className="flex flex-col gap-4 overflow-y-auto scroll-smooth"
+    >
       {messages.map((message: Message, idx: Number) => {
         if (message.visible) {
           if (message.role === "assistant") {
