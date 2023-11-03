@@ -1,0 +1,34 @@
+name: Build & deploy Next.js app to Azure Web App
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: [main]
+
+  # Allow manual workflow trigger
+  workflow_dispatch:
+env:
+  ORGANIZATION: "kelalab"
+  IMAGENAME: "selittaja"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🌱 Checkout to the branch
+        uses: actions/checkout@v4
+
+      - name: 🍏 Build image
+        run: |
+          cd ./src/backend
+          docker build "$GITHUB_WORKSPACE" -f Dockerfile -t ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:${{ github.sha }}
+
+      - name: Build and push webhook image to ghcr
+        run: |
+          PACKAGE_VERSION=$(cat ./package.json | jq '.version' | tr -d '"')
+          echo $PACKAGE_VERSION
+          docker tag ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:${{ github.sha }} ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:latest
+          docker tag ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:${{ github.sha }} ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:$PACKAGE_VERSION
+          docker push ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:latest
+          docker push ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:$PACKAGE_VERSION

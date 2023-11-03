@@ -4,7 +4,8 @@ from chat_completion import process_input_with_retrieval, get_completion_from_me
 from add_document.add_document import AddDocument
 from models import Message, MessageList
 import uvicorn
-
+import os
+from constants import UVICORN_HOST
 from pydantic import BaseModel
 from typing import List
 
@@ -54,4 +55,4 @@ async def get_body(data: GraphList):
 app.mount("/", StaticFiles(directory="static", html="true"), name="static")
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, log_level="info")
+    uvicorn.run("main:app", host=UVICORN_HOST, port=8000, log_level="info")

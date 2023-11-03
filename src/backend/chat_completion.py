@@ -1,3 +1,4 @@
+import os
 import openai
 import openai.error
 # imports
@@ -12,13 +13,14 @@ from psycopg2.extras import execute_values
 from models import Document, Response
 import re
 from util import num_tokens_from_string
+from constants import DB_HOST
 from env import AZURE_OPENAI_API_DEPLOYMENT_NAME, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_KEY, AZURE_OPENAI_API_VERSION
 
 conn = psycopg2.connect(
     database='embeddings',
     user='pgvector',
     password='hassusalakala',
-    host='localhost'
+    host=DB_HOST
 )
 
 GPT35PROMPTPER1KTKN = 0.003

@@ -20,11 +20,13 @@ import env
 token_limit_per_minute = 180000
 short_limit = 40000
 
+db_host = os.environ['DB_HOST'] or 'localhost'
+
 conn = psycopg2.connect(
     database='embeddings',
     user='pgvector',
     password='hassusalakala',
-    host='localhost'
+    host=db_host
 )
 
 openai.api_key = env.AZURE_OPENAI_API_KEY

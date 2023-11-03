@@ -1,14 +1,15 @@
 import psycopg2
-import sys, getopt
+import os, sys, getopt
+from constants import DB_HOST
 
 conn = psycopg2.connect(
     database='embeddings',
     user='pgvector',
     password='hassusalakala',
-    host='localhost'
+    host=DB_HOST
 )
 
-def create_table(name='embeddings'):
+def create_table(conn, name='embeddings'):
     cur = conn.cursor()
     table_create_command = f'''
     CREATE EXTENSION IF NOT EXISTS vector;
@@ -32,7 +33,7 @@ if __name__ == '__main__':
     for opt, arg in opts:
         print('opt', opt)
         if opt == '-n':
-            create_table(arg)
+            create_table(conn, arg)
             print('created table: ', arg)
             sys.exit()
     create_table()
