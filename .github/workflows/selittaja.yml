@@ -22,7 +22,7 @@ jobs:
       - name: 🍏 Build image
         run: |
           cd ./src/backend
-          docker build "$GITHUB_WORKSPACE" -f Dockerfile -t ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:${{ github.sha }}
+          docker build . -f Dockerfile -t ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:${{ github.sha }}
 
       - name: Build and push webhook image to ghcr
         run: |
