@@ -1,15 +1,30 @@
 import React, { useState } from "react";
 import { Message } from "../../types";
 
+const func = (json_msgs: Message[]) => {
+  let list = [];
+  for (let msg of json_msgs) {
+    let _msg: Message = msg;
+    if (_msg.role == "system") {
+      _msg.visible = false;
+    } else {
+      _msg.visible = true;
+    }
+    console.log("_msg", _msg);
+    list.push(_msg);
+  }
+  return list;
+};
+
 const ChatInput = (props: any) => {
-  const { addMessage, messages } = props;
+  const { addMessage, resetMessages, setAllMessages, messages } = props;
   const [input, setInput] = useState("");
   const [benefit, setBenefit] = useState("Toimeentulotuki");
   //const [messages, setMessages] = useState([]);
   const sendMessage = async (message: string) => {
     console.log("sendMessage", message);
     if (messages.length === 0) {
-      const my_msg: Message = { message: message, user: "Me" };
+      const my_msg: Message = { content: message, role: "user", visible: true };
       addMessage(my_msg);
       const response = await fetch(
         `/message?benefit=${benefit}&message=${message}`,
@@ -21,34 +36,78 @@ const ChatInput = (props: any) => {
         }
       );
       const json = await response.json();
+      const json_msgs: Message[] = json.messages;
+      // clear our message list
+      if (json_msgs.length > 0) {
+        resetMessages();
+      }
+      console.log("jsonmessages", json_msgs);
+      for (let msg of json_msgs) {
+        let _msg: Message = msg;
+        if (_msg.role == "system") {
+          _msg.visible = false;
+        } else {
+          _msg.visible = true;
+        }
+        console.log("_msg", _msg);
+        addMessage(_msg);
+      }
       const resp_msg: Message = {
-        message: json.response,
-        cost: json.cost,
-        user: "KelalabGPT",
+        content: json.response.message,
+        cost: json.response.cost,
+        //user: "KelalabGPT",
+        role: json.response.role,
+        visible: true,
       };
       addMessage(resp_msg);
       setInput("");
-      console.log("response", json);
     } else {
-      const my_msg: Message = { message: message, user: "Me" };
+      const my_msg: Message = { content: message, role: "user", visible: true };
       addMessage(my_msg);
+      const messages_to_send = messages.map((m: Message) => {
+        return { content: m.content, role: m.role };
+      });
+      messages_to_send.push({ content: my_msg.content, role: my_msg.role });
+      console.log("messages_to_send", messages_to_send);
       const response = await fetch(`/messages`, {
         headers: {
           Accept: "application/json",
+          "Content-Type": "application/json",
         },
         method: "POST",
-        body: JSON.stringify(messages),
+        body: JSON.stringify({ data: messages_to_send }),
       });
+      const json = await response.json();
+      const json_msgs: Message[] = json.messages;
+      // clear our message list
+      if (json_msgs.length > 0) {
+        resetMessages();
+      }
+      const r_list = func(json_msgs);
+      const resp_msg: Message = {
+        content: json.response.message,
+        cost: json.response.cost,
+        role: json.response.role,
+        visible: true,
+      };
+      r_list.push(resp_msg);
+      setAllMessages(r_list);
+      setInput("");
     }
   };
   return (
-    <div className="flex p-2 border-2">
+    <div className="flex p-2 border-2 rounded-lg">
       <input
-        className="flex-1"
+        className="flex-1 bg-slate-950 text-white"
         onChange={(e) => setInput(e.currentTarget.value)}
         value={input}
       />
-      <button onClick={() => sendMessage(input)}>Lähetä</button>
+      <button
+        className="border-2 p-2 rounded-lg text-white"
+        onClick={() => sendMessage(input)}
+      >
+        Lähetä
+      </button>
     </div>
   );
 };

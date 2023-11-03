@@ -1,5 +1,6 @@
 export type Message = {
-  message: String;
-  user: String;
+  content: String;
+  role: String;
   cost?: Number;
+  visible: Boolean;
 };

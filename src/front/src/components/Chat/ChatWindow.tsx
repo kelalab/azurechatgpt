@@ -4,27 +4,31 @@ import ChatInput from "./ChatInput";
 import { Message } from "../../types";
 
 const ChatWindow = (props: any) => {
-  const { messages, addMessage } = props;
-  //const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
-  // const addMessage = (message: Message) => {
-  //   console.log("messages before", messages);
-  //   setMessages([...messages, message]);
-  //   console.log("messages after", messages);
-  // };
+  const addMessage = (message: Message) => {
+    setMessages((prev_state) => {
+      return [...prev_state, message];
+    });
+  };
 
-  // --------- Start block ---------
+  const resetMessages = () => {
+    setMessages([]);
+  };
 
-  useEffect(() => {
-    console.log(`current state:`, messages);
-  }, [messages]);
-
-  // --------- End block ---------
+  const setAllMessages = (messages: Message[]) => {
+    setMessages([...messages]);
+  };
 
   return (
-    <div>
+    <div className="w-4/5 h-full gap-4 flex flex-col justify-between">
       <ChatHistory messages={messages} />
-      <ChatInput addMessage={addMessage} messages={messages} />
+      <ChatInput
+        addMessage={addMessage}
+        resetMessages={resetMessages}
+        setAllMessages={setAllMessages}
+        messages={messages}
+      />
     </div>
   );
 };
