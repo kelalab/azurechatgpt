@@ -27,5 +27,4 @@ jobs:
       - name: Build and push webhook image to ghcr
         run: |
           docker tag ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:${{ github.sha }} ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:latest
-          docker tag ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:${{ github.sha }} ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:$PACKAGE_VERSION
           docker push ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:latest
