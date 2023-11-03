@@ -97,7 +97,7 @@ def get_completion_from_messages(messages, model=AZURE_OPENAI_API_DEPLOYMENT_NAM
     print(response)
     cost = response.usage.prompt_tokens / 1000.0 * GPT35PROMPTPER1KTKN + response.usage.completion_tokens / 1000.0 * GPT35COMPLETIONPER1KTKN
     #return 'message': response.choices[0].message['content'], 'cost': cost
-    return Response(response.choices[0].message['content'],cost)
+    return Response(response.choices[0].message['content'],cost,response.choices[0].message['role'])
 
 def process_input_with_retrieval(benefit, user_input, add_guidance = True):
     delimiter = '```'
@@ -138,6 +138,6 @@ def process_input_with_retrieval(benefit, user_input, add_guidance = True):
     print('MESSAGES: ', messages)
     openai_response = get_completion_from_messages(messages).response
     sources = map(lambda x: x[1].replace('title=','') ,related_docs)
-    final_response = Response(openai_response.message, openai_response.cost, list(sources), messages)
+    final_response = Response(openai_response.message, openai_response.cost, openai_response.role, list(sources), messages)
     print('final_response', final_response)
     return final_response
