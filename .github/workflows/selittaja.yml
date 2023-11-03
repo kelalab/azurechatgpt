@@ -24,6 +24,9 @@ jobs:
           cd ./src/backend
           docker build . -f Dockerfile -t ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:${{ github.sha }}
 
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Build and push webhook image to ghcr
         run: |
           docker tag ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:${{ github.sha }} ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:latest
