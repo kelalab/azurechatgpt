@@ -138,7 +138,7 @@ def process_input_with_retrieval(benefit, user_input, add_guidance = True):
 
     sources = []
     for doc in related_docs:
-        sources.append(doc[0])
+        sources.append([doc[0], doc[2]])
 
     final_response = Response(openai_response.message, openai_response.cost, openai_response.role, sources, messages)
 
