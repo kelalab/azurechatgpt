@@ -8,12 +8,9 @@ import os
 from constants import UVICORN_HOST
 from pydantic import BaseModel
 from typing import List
+from add_document.repository import Repository
 
 app = FastAPI()
-
-#@app.get('/')
-#async def root():
-#    return {'message': 'Hello World'}
 
 @app.post('/message')
 async def post_message(benefit:str, message: str):
@@ -26,12 +23,10 @@ async def post_messages(data: MessageList):
     '''Function for sending the message chain to openai to continue the conversation'''
     #TODO: this method is untested and unfinished, need to begin with getting the message chain in the response from the initial message
     # and then check what the completion returns and what we need to pass back in the response to continue with the conversation
-    print(data)
     dict_data = []
     for d in data.data:
         dict_data.append({'role': d.role, 'content': d.content})
     response = get_completion_from_messages(dict_data)
-    print(response)
     return {'response': response.response, 'messages':data.data}
 
 @app.post('/add_document')
@@ -39,6 +34,10 @@ async def add_document(benefit: str, file: UploadFile):
     content = await file.read()
     ad = AddDocument(file.filename, content)
     return ad.generate_embeddings(benefit)
+
+@app.get('/get_source')
+async def get_source(id: str):
+    return Repository().get_source(id)
 
 class GraphBase(BaseModel):
     start: str

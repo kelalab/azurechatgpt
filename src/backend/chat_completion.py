@@ -14,6 +14,7 @@ from models import Document, Response
 import re
 from util import num_tokens_from_string
 from constants import DB_HOST, AZURE_OPENAI_API_DEPLOYMENT_NAME, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_API_KEY
+import json
 
 conn = psycopg2.connect(
     database='embeddings',
@@ -79,7 +80,7 @@ def get_top3_similar_docs(benefit, query_embedding, conn):
     # Get the top 3 most similar documents using the KNN <=> operator
     #cur.execute('SELECT pageContent,metadata,vector <=> %s AS distance FROM embeddings ORDER BY vector <=> %s LIMIT 3', (embedding_array,embedding_array,))
     
-    cur.execute('SELECT pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings WHERE benefit = \'' + benefit + '\' ORDER BY vector <=> %s LIMIT 6', (embedding_array,embedding_array,))
+    cur.execute('SELECT id,pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings WHERE benefit = \'' + benefit + '\' ORDER BY vector <=> %s LIMIT 6', (embedding_array,embedding_array,))
 
     top3_docs = cur.fetchall()
     return top3_docs
@@ -95,7 +96,6 @@ def get_completion_from_messages(messages, model=AZURE_OPENAI_API_DEPLOYMENT_NAM
         deployment_id=deployment_id
 
     )
-    print(response)
     cost = response.usage.prompt_tokens / 1000.0 * GPT35PROMPTPER1KTKN + response.usage.completion_tokens / 1000.0 * GPT35COMPLETIONPER1KTKN
     #return 'message': response.choices[0].message['content'], 'cost': cost
     return Response(response.choices[0].message['content'],cost,response.choices[0].message['role'])
@@ -105,9 +105,7 @@ def process_input_with_retrieval(benefit, user_input, add_guidance = True):
 
     #Step 1: Get documents related to the user input from database
     related_docs = get_top3_similar_docs(benefit, get_embedding(user_input)['data'][0]['embedding'], conn)
-    print('related_docs before filter', related_docs)
-    related_docs = list(filter(lambda x: x[2]<distance_limit,related_docs))
-    print('related_docs', related_docs)
+    related_docs = list(filter(lambda x: x[3]<distance_limit,related_docs))
     content = ''
     for rl in related_docs:
         content += re.sub(r'\n', ' ',rl[0])
@@ -136,9 +134,12 @@ def process_input_with_retrieval(benefit, user_input, add_guidance = True):
         {'role': 'user', 'content': f'{delimiter}{user_input}{delimiter}'},
     ]
 
-    print('MESSAGES: ', messages)
     openai_response = get_completion_from_messages(messages).response
-    sources = map(lambda x: x[1].replace('title=','') ,related_docs)
-    final_response = Response(openai_response.message, openai_response.cost, openai_response.role, list(sources), messages)
-    print('final_response', final_response)
+
+    sources = []
+    for doc in related_docs:
+        sources.append(doc[0])
+
+    final_response = Response(openai_response.message, openai_response.cost, openai_response.role, sources, messages)
+
     return final_response

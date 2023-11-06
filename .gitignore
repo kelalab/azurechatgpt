@@ -36,3 +36,4 @@ src/backend/env.py
 *.dita
 
 __pycache__
+*.sh

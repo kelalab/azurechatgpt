@@ -36,3 +36,9 @@ class Repository:
 
     def extract_arguments(self, document: Document):
         return [[str(uuid.uuid4()).replace('-',''), document.chatthreadid, document.userid, document.pageContent, document.metadata, document.vector, document.benefit]]
+    
+    def get_source(self, id:str, table = 'clause_embeddings'):
+       cur = self.conn.cursor()
+       cur.execute('SELECT id, pagecontent FROM ' + table + ' WHERE id = \'' + id + '\'')
+       ret = cur.fetchall()
+       return ret
