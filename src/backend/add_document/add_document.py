@@ -1,7 +1,7 @@
 import io
-from .splitter import Splitter
-from .embeddings import Embeddings
-from .repository import Repository
+from add_document.splitter import Splitter
+from add_document.embeddings import Embeddings
+from add_document.repository import Repository
 from models import Document
 
 class AddDocument:
