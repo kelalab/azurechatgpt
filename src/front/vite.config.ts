@@ -8,6 +8,8 @@ export default defineConfig({
     //base: '/ui/',
     proxy: {
       "/message": "http://127.0.0.1:8000",
+      "/messages": "http://127.0.0.1:8000",
+      "/get_source": "http://127.0.0.1:8000",
     },
   },
   build: {

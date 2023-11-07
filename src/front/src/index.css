@@ -24,3 +24,7 @@
   background: #555;
   background: theme("colors.blue.900");
 }
+
+.chat-window {
+  max-height: calc(100vh - 106px);
+}

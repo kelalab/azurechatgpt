@@ -65,6 +65,7 @@ const ChatInput = (props: any) => {
         cost: json.response.cost,
         //user: "KelalabGPT",
         role: json.response.role,
+        sources: json.response.sources,
         visible: true,
       };
       addMessage(resp_msg);
@@ -109,7 +110,7 @@ const ChatInput = (props: any) => {
   }, [messages]);
 
   const handleKey = (keyboardEvent: KeyboardEvent) => {
-    console.log("key input", keyboardEvent.key);
+    //console.log("key input", keyboardEvent.key);
     if (keyboardEvent.key == "Enter") {
       sendMessage(input);
     }

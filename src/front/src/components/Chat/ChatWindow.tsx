@@ -1,11 +1,11 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import { useState } from "react";
 import ChatHistory from "./ChatHistory";
 import ChatInput from "./ChatInput";
 import { Message } from "../../types";
 
 const ChatWindow = (props: any) => {
   const [messages, setMessages] = useState<Message[]>([]);
-
+  const { activeSource, setActiveSource } = props;
   const addMessage = (message: Message) => {
     setMessages((prev_state) => {
       return [...prev_state, message];
@@ -21,8 +21,8 @@ const ChatWindow = (props: any) => {
   };
 
   return (
-    <div className="w-4/5 h-full gap-4 flex flex-col justify-between overflow-hidden">
-      <ChatHistory messages={messages} />
+    <div className="chat-window w-4/5 flex-1 h-full gap-4 flex flex-col justify-between overflow-hidden">
+      <ChatHistory messages={messages} setActiveSource={setActiveSource} />
       <ChatInput
         addMessage={addMessage}
         resetMessages={resetMessages}
