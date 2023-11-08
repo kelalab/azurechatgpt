@@ -225,6 +225,8 @@ def metadata_func(record: dict, metadata: dict) -> dict:
         metadata['Header 4'] = record.get('metadata').get('Header 4')
     if record.get('metadata').get('Header 5'):
         metadata['Header 5'] = record.get('metadata').get('Header 5')
+    if record.get('metadata').get('Header 6'):
+        metadata['Header 6'] = record.get('metadata').get('Header 6')
     return metadata
 
 def create_lc_embeddings(filename='output_lc'):

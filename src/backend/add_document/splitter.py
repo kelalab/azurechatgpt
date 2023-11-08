@@ -54,7 +54,8 @@ class Splitter:
             ('##', 'Header 2'),
             ('###', 'Header 3'),
             ('####', 'Header 4'),
-            ('#####', 'Header 5')
+            ('#####', 'Header 5'),
+            ('######', 'Header 6')
         ]
         text_splitter = MarkdownHeaderTextSplitter(headers_to_split_on)
 
