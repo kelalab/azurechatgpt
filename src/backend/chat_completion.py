@@ -74,6 +74,7 @@ def get_top3_similar_docs(benefit, query_embedding, conn):
        a list of top three document results
     '''
     embedding_array = np.array(query_embedding)
+    print(query_embedding)
     # Register pgvector extension
     register_vector(conn)
     cur = conn.cursor()
@@ -114,28 +115,37 @@ def process_input_with_retrieval(benefit, user_input, add_guidance = True):
     if add_guidance:    
         #content = ''
         system_message = f'''
-        Käyttäydy kuin Kelan asiantuntija. Mikäli et löydä vastausta perustelua tukevasta tekstistä, kieltäydy kohteliaasti vastaamasta. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
-        Vastauksen muotoilu tulee olla:
+        Käyttäydy kuin Kelan asiantuntija. Pysy annetussa kontekstissa. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
+        Jos pystyt vastaamaan annetun kontekstin perusteella, vastauksen muotoilu tulee olla:
         1. Suositus
-        2. Perustelu suositukselle.
-        3. Listaus kaikista poikkeustilanteista
-        Perustelut löytyvät tästä tekstistä: ### {content} ###
+        2. Perustelu suositukselle annetusta kontekstista
+        3. Listaus kaikista poikkeustilanteista, jotka löytyvät annetusta kontekstista
+        Annettu konteksti: [KONTEKSTI] {content} [/KONTEKSTI]
+        Mikäli et löydä vastausta annetusta kontekstista, kieltäydy kohteliaasti vastaamasta.
         '''
+        # '''
+        # Käyttäydy kuin Kelan asiantuntija. Mikäli et löydä vastausta perustelua tukevasta tekstistä, kieltäydy kohteliaasti vastaamasta. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
+        # Vastauksen muotoilu tulee olla:
+        # 1. Suositus
+        # 2. Perustelu suositukselle.
+        # 3. Listaus kaikista poikkeustilanteista
+        # Perustelut löytyvät tästä tekstistä: ### {content} ###
+        # '''
     else:
         system_message = user_input
     
     system_message = re.sub(r'\n', ' ', system_message)
     #    
-
     # Prepare messages to pass to model
     # We use a delimiter to help the model understand the where the user_input starts and ends
+    
     messages = [
         {'role': 'system', 'content': system_message},
-        {'role': 'user', 'content': f'{delimiter}{user_input}{delimiter}'},
+        {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
     ]
 
     openai_response = get_completion_from_messages(messages).response
-
+    
     sources = []
     for doc in related_docs:
         source = json.loads(doc[2])
