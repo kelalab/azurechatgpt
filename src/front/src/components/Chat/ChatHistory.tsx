@@ -20,7 +20,7 @@ interface MessageBoxProps extends PropsWithChildren {
 }
 
 const MessageBox = (props: MessageBoxProps) => {
-  const { children, right, user, cost } = props;
+  const { children, right, user, cost, skeleton } = props;
   if (right)
     return (
       <div className="border-2 rounded-b-xl rounded-tl-xl self-end w-4/5 p-4 text-white bg-slate-800">
@@ -37,7 +37,7 @@ const MessageBox = (props: MessageBoxProps) => {
 };
 
 const ChatHistory = (props: any) => {
-  const { messages, setActiveSource } = props;
+  const { messages, setActiveSource, loading } = props;
   console.log("messages: ", messages);
 
   const fetchSource = async (id: String) => {
@@ -79,6 +79,7 @@ const ChatHistory = (props: any) => {
                           {json["Header 3"] && "/" + json["Header 3"]}
                           {json["Header 4"] && "/" + json["Header 4"]}
                           {json["Header 5"] && "/" + json["Header 5"]}
+                          {json["Header 6"] && "/" + json["Header 6"]}
                         </a>
                       </div>
                     );
@@ -95,6 +96,7 @@ const ChatHistory = (props: any) => {
             );
         }
       })}
+      {loading && <MessageBox skeleton user={AI_NAME} />}
     </div>
   );
 };

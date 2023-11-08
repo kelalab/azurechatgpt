@@ -6,6 +6,7 @@ import ActiveSource from "./components/Chat/ActiveSource";
 
 const App = () => {
   const [activeSource, setActiveSource] = useState("");
+  const [loading, setLoading] = useState(false);
 
   return (
     <div className="w-full h-full p-2 items-center flex flex-col bg-slate-950 overflow-hidden">
@@ -22,9 +23,11 @@ const App = () => {
         <ChatWindow
           activeSource={activeSource}
           setActiveSource={setActiveSource}
+          loading={loading}
+          setLoading={setLoading}
         />
         {activeSource && (
-          <div className="flex-1 overflow-y-auto chat-window">
+          <div className="flex-1 overflow-y-auto chat-window border-l-2 px-2">
             <ActiveSource
               activeSource={activeSource}
               setActiveSource={setActiveSource}

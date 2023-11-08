@@ -3,7 +3,7 @@ const ActiveSource = (props) => {
   console.log("active source", activeSource);
   return (
     <div className="text-white">
-      <div className="border-b-2 flex flex-col w-full">
+      <div className="border-b-2 flex flex-col w-full p-2">
         <div className="self-end">
           <h2></h2>
           <button
@@ -14,9 +14,11 @@ const ActiveSource = (props) => {
           </button>
         </div>
       </div>
-      {activeSource.split("\n").map((paragraph) => {
-        return <p>{paragraph}</p>;
-      })}
+      <div className="p-2 px-4">
+        {activeSource.split("\n").map((paragraph) => {
+          return <p>{paragraph}</p>;
+        })}
+      </div>
     </div>
   );
 };
