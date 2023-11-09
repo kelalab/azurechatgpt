@@ -24,8 +24,9 @@ def create_table(conn, name='embeddings'):
         );
         '''
     cur.execute(table_create_command)
-    cur.close()
     conn.commit()
+    cur.close()
+    
 
 if __name__ == '__main__':
     '''Read table name from args '''

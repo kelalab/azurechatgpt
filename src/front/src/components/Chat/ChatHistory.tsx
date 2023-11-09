@@ -1,6 +1,8 @@
 import { PropsWithChildren } from "react";
 import { Message } from "../../types";
 import { AI_NAME } from "../../constants";
+import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 interface CostProps extends PropsWithChildren {
   cost?: Number;
@@ -17,6 +19,7 @@ const Cost = (props: CostProps) => {
 
 interface MessageBoxProps extends PropsWithChildren {
   right?: Boolean;
+  skeleton?: Boolean;
 }
 
 const MessageBox = (props: MessageBoxProps) => {
@@ -29,10 +32,26 @@ const MessageBox = (props: MessageBoxProps) => {
       </div>
     );
   return (
-    <div className="border-2 rounded-b-xl rounded-tr-xl w-4/5 p-4 text-white">
-      <div className="font-bold text-sky-600 p-2">{user}</div>
-      <div className="p-2">{children}</div>
-    </div>
+    <SkeletonTheme baseColor="#202020" highlightColor="#444">
+      <div className="border-2 rounded-b-xl rounded-tr-xl w-4/5 p-4 text-white">
+        <div className="font-bold text-sky-600 p-2">{user}</div>
+        <div className="p-2">
+          {skeleton ? (
+            <>
+              <p className="mb-2">
+                <Skeleton className="mb-2" inline count={3} />
+              </p>
+              <p className="mb-2">
+                <Skeleton className="mb-2" count={1} />
+              </p>
+              <Skeleton className="mb-2" count={1} />
+            </>
+          ) : (
+            children
+          )}
+        </div>
+      </div>
+    </SkeletonTheme>
   );
 };
 
@@ -96,7 +115,7 @@ const ChatHistory = (props: any) => {
             );
         }
       })}
-      {loading && <MessageBox skeleton user={AI_NAME} />}
+      {loading && <MessageBox skeleton user={AI_NAME}></MessageBox>}
     </div>
   );
 };
