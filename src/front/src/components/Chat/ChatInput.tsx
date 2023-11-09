@@ -17,7 +17,14 @@ const func = (json_msgs: Message[]) => {
 };
 
 const ChatInput = (props: any) => {
-  const { addMessage, resetMessages, setAllMessages, messages } = props;
+  const {
+    addMessage,
+    resetMessages,
+    setAllMessages,
+    messages,
+    loading,
+    setLoading,
+  } = props;
   const [input, setInput] = useState("");
   const [benefit, setBenefit] = useState("Toimeentulotuki");
 
@@ -34,6 +41,7 @@ const ChatInput = (props: any) => {
     if (messages.length === 0) {
       const my_msg: Message = { content: message, role: "user", visible: true };
       addMessage(my_msg);
+      setLoading(true);
       const response = await fetch(
         `/message?benefit=${benefit}&message=${message}`,
         {
@@ -65,10 +73,12 @@ const ChatInput = (props: any) => {
         cost: json.response.cost,
         //user: "KelalabGPT",
         role: json.response.role,
+        sources: json.response.sources,
         visible: true,
       };
       addMessage(resp_msg);
       setInput("");
+      setLoading(false);
     } else {
       const my_msg: Message = { content: message, role: "user", visible: true };
       addMessage(my_msg);
@@ -109,14 +119,14 @@ const ChatInput = (props: any) => {
   }, [messages]);
 
   const handleKey = (keyboardEvent: KeyboardEvent) => {
-    console.log("key input", keyboardEvent.key);
+    //console.log("key input", keyboardEvent.key);
     if (keyboardEvent.key == "Enter") {
       sendMessage(input);
     }
   };
 
   return (
-    <div className="flex p-2 border-2 rounded-lg">
+    <div className="flex p-2 border-2 rounded-lg mx-8">
       <input
         className="flex-1 bg-slate-950 text-white"
         onChange={(e) => setInput(e.currentTarget.value)}

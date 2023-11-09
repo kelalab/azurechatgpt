@@ -28,7 +28,8 @@ GPT35COMPLETIONPER1KTKN = 0.004
 
 # we have to be have some confidence that docs are relevant
 #
-distance_limit = 0.17
+distance_limit = 0.5
+#distance_limit = 0.17
 #distance_limit = 0.134
 
 def get_embedding_cost(num_tokens):
@@ -74,13 +75,14 @@ def get_top3_similar_docs(benefit, query_embedding, conn):
        a list of top three document results
     '''
     embedding_array = np.array(query_embedding)
+    #print(query_embedding)
     # Register pgvector extension
     register_vector(conn)
     cur = conn.cursor()
     # Get the top 3 most similar documents using the KNN <=> operator
     #cur.execute('SELECT pageContent,metadata,vector <=> %s AS distance FROM embeddings ORDER BY vector <=> %s LIMIT 3', (embedding_array,embedding_array,))
     
-    cur.execute('SELECT id,pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings WHERE benefit = \'' + benefit + '\' ORDER BY vector <=> %s LIMIT 6', (embedding_array,embedding_array,))
+    cur.execute('SELECT id,pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings WHERE benefit = \'' + benefit + '\' ORDER BY vector <=> %s LIMIT 8', (embedding_array,embedding_array,))
 
     top3_docs = cur.fetchall()
     return top3_docs
@@ -106,41 +108,84 @@ def process_input_with_retrieval(benefit, user_input, add_guidance = True):
     #Step 1: Get documents related to the user input from database
     related_docs = get_top3_similar_docs(benefit, get_embedding(user_input)['data'][0]['embedding'], conn)
     related_docs = list(filter(lambda x: x[3]<distance_limit,related_docs))
+    
     content = ''
+    i=0
     for rl in related_docs:
-        content += re.sub(r'\n', ' ',rl[0])
+        content += '<LÄHDE'+ str(i) + '> '+ re.sub(r'######', '', re.sub(r'\n', ' ',rl[1])) + '</LÄHDE'+ str(i) + '>'
+        i += 1
+    print('content',content)
+    system_message = f'''ARVIOI MITKÄ LÄHTEET vastaavat parhaiten käyttäjän esittämään kysymykseen. 
+                         Palauta vähintään kaksi lähdettä. 
+                         Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
+                         Vastauksesi saa sisältää vain listauksen lähteiden numeroista.
+                         [LÄHTEET]{content}[/LÄHTEET]'''
+                        # Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
+
+    messages = [
+        {'role': 'system', 'content': system_message},
+        {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
+    ]
+    openai_response = get_completion_from_messages(messages).response.message
+
+    optimal_sources = openai_response.split(",")
+    optimal_src_indexes = []
+    for os in optimal_sources:
+      optimal_src_indexes.append(int(re.sub('LÄHDE','',os)))
+
+    print('optimal_src_indexes:', optimal_src_indexes)
+
+    content = ''
+    #for rl in related_docs:
+    #    content += re.sub(r'\n', ' ',rl[1])
+    for idx in optimal_src_indexes:
+        content += re.sub(r'\n', ' ',related_docs[idx][1])
     #TODO: siivoa dokumentit
 
     if add_guidance:    
         #content = ''
         system_message = f'''
-        Käyttäydy kuin Kelan asiantuntija. Mikäli et löydä vastausta perustelua tukevasta tekstistä, kieltäydy kohteliaasti vastaamasta. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
-        Vastauksen muotoilu tulee olla:
+        Käyttäydy kuin Kelan asiantuntija. Pysy annetussa kontekstissa. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
+        Vastauksen muotoilun pitää olla:
         1. Suositus
-        2. Perustelu suositukselle.
-        3. Listaus kaikista poikkeustilanteista
-        Perustelut löytyvät tästä tekstistä: ### {content} ###
+        2. Perustelu suositukselle (annetusta kontekstista)
+        3. Listaus kaikista poikkeustilanteista, jotka löytyvät annetusta kontekstista
+        Annettu konteksti: [KONTEKSTI] {content} [/KONTEKSTI]
+        Mikäli et löydä vastausta annetusta kontekstista, kieltäydy kohteliaasti vastaamasta.
         '''
+        # '''
+        # Käyttäydy kuin Kelan asiantuntija. Mikäli et löydä vastausta perustelua tukevasta tekstistä, kieltäydy kohteliaasti vastaamasta. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
+        # Vastauksen muotoilu tulee olla:
+        # 1. Suositus
+        # 2. Perustelu suositukselle.
+        # 3. Listaus kaikista poikkeustilanteista
+        # Perustelut löytyvät tästä tekstistä: ### {content} ###
+        # '''
     else:
         system_message = user_input
     
     system_message = re.sub(r'\n', ' ', system_message)
     #    
-
     # Prepare messages to pass to model
     # We use a delimiter to help the model understand the where the user_input starts and ends
+    
     messages = [
         {'role': 'system', 'content': system_message},
-        {'role': 'user', 'content': f'{delimiter}{user_input}{delimiter}'},
+        {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
     ]
 
     openai_response = get_completion_from_messages(messages).response
-
+    
     sources = []
-    for doc in related_docs:
+    for idx in optimal_src_indexes:
+        doc = related_docs[idx]
         source = json.loads(doc[2])
         source['id'] = doc[0]
         sources.append(json.dumps(source))
+    #for doc in related_docs:
+    #    source = json.loads(doc[2])
+    #    source['id'] = doc[0]
+    #    sources.append(json.dumps(source))
 
     final_response = Response(openai_response.message, openai_response.cost, openai_response.role, sources, messages)
 

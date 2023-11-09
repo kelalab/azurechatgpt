@@ -2,8 +2,12 @@ import React, { useState } from "react";
 import ChatWindow from "./components/Chat/ChatWindow";
 import { Message } from "./types";
 import TopBar from "./components/Layout/TopBar";
+import ActiveSource from "./components/Chat/ActiveSource";
 
 const App = () => {
+  const [activeSource, setActiveSource] = useState("");
+  const [loading, setLoading] = useState(false);
+
   return (
     <div className="w-full h-full p-2 items-center flex flex-col bg-slate-950 overflow-hidden">
       <TopBar icon="ai-icon.png" title="Selittäjä">
@@ -15,7 +19,22 @@ const App = () => {
           </select>
         </div>
       </TopBar>
-      <ChatWindow />
+      <div className="flex w-full h-full">
+        <ChatWindow
+          activeSource={activeSource}
+          setActiveSource={setActiveSource}
+          loading={loading}
+          setLoading={setLoading}
+        />
+        {activeSource && (
+          <div className="flex-1 overflow-y-auto chat-window border-l-2 px-2">
+            <ActiveSource
+              activeSource={activeSource}
+              setActiveSource={setActiveSource}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
