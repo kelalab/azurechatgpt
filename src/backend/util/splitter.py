@@ -3,7 +3,6 @@ import sys, getopt
 import os 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.text_splitter import MarkdownHeaderTextSplitter
-from util import num_tokens_from_string
 import shutil
 import re
 

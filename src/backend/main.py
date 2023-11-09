@@ -1,21 +1,21 @@
 from fastapi import FastAPI, UploadFile
 from fastapi.staticfiles import StaticFiles
-from chat_completion import ChatCompletion
-from add_document.add_document import AddDocument
-from models import Message, MessageList
 import uvicorn
 import os
-from constants import UVICORN_HOST
-from pydantic import BaseModel
-from typing import List
+
+from open_ai.open_ai import OpenAi
+from add_document.add_document import AddDocument
+from model.constants import UVICORN_HOST
 from db.repository import Repository
+from model.graph import GraphList
+from model.message import MessageList
 
 app = FastAPI()
 
 @app.post('/message')
 async def post_message(benefit:str, message: str):
     '''Function for sending a single message to openai'''
-    response = ChatCompletion().process_input_with_retrieval(benefit, message)
+    response = OpenAi().process_input_with_retrieval(benefit, message)
     return {'response': response.response, 'messages':response.messages}
 
 @app.post('/messages')
@@ -26,7 +26,7 @@ async def post_messages(data: MessageList):
     dict_data = []
     for d in data.data:
         dict_data.append({'role': d.role, 'content': d.content})
-    response = ChatCompletion().get_completion_from_messages(dict_data)
+    response = OpenAi().get_completion_from_messages(dict_data)
     return {'response': response.response, 'messages':data.data}
 
 @app.post('/add_document')
@@ -38,14 +38,6 @@ async def add_document(benefit: str, file: UploadFile):
 @app.get('/get_source')
 async def get_source(id: str):
     return Repository().get_source(id)
-
-class GraphBase(BaseModel):
-    start: str
-    end: str
-    distance: int
-
-class GraphList(BaseModel):
-    data: List[GraphBase]
 
 @app.post("/dummypath")
 async def get_body(data: GraphList):

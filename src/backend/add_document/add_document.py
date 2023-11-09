@@ -3,7 +3,7 @@ import io
 from add_document.splitter import Splitter
 from add_document.embeddings import Embeddings
 from db.repository import Repository
-from models import Document
+from model.document import Document
 
 class AddDocument:
     def __init__(self, file_name, content):

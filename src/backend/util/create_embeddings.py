@@ -8,14 +8,14 @@ import uuid
 import pandas as pd
 import numpy as np
 import tiktoken
-import openai
+import open_ai
 import openai.error
 import math
 import sys, getopt, re
 import os
-from models import Document
+from backend.model.models import Document
 from langchain.document_loaders import JSONLoader
-from constants import AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_API_KEY
+from backend.model.constants import AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_API_KEY
 
 token_limit_per_minute = 180000
 short_limit = 40000
@@ -29,10 +29,10 @@ conn = psycopg2.connect(
     host=db_host
 )
 
-openai.api_key = AZURE_OPENAI_API_KEY
-openai.api_base = 'https://' + AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com' # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
-openai.api_type = 'azure'
-openai.api_version = AZURE_OPENAI_API_VERSION
+open_ai.api_key = AZURE_OPENAI_API_KEY
+open_ai.api_base = 'https://' + AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com' # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
+open_ai.api_type = 'azure'
+open_ai.api_version = AZURE_OPENAI_API_VERSION
 
 cur = conn.cursor()
 
@@ -40,9 +40,9 @@ def my_get_embedding(text: str, progress: int,model='text-embedding-ada-002'):
     text = text.replace('\n', ' ')
     while True:
         try:
-            embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
+            embedding = open_ai.Embedding.create(input = [text], model=model, deployment_id=model)
             break
-        except openai.error.RateLimitError as e:
+        except open_ai.error.RateLimitError as e:
             print('retrying...', progress, e)
             time.sleep(1)
 
@@ -51,8 +51,8 @@ def my_get_embedding(text: str, progress: int,model='text-embedding-ada-002'):
 def get_embedding(text: str, progress: int,model='text-embedding-ada-002'):
     text = text.replace('\n', ' ')
     try:
-        embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
-    except openai.error.RateLimitError as e:
+        embedding = open_ai.Embedding.create(input = [text], model=model, deployment_id=model)
+    except open_ai.error.RateLimitError as e:
         print('retrying...', progress, e)
         time.sleep(1)
         return get_embedding(text, progress, model)

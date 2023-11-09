@@ -1,23 +1,14 @@
-import os
 import openai
 import openai.error
-# imports
 import time
-import openai
-import psycopg2
-import pandas as pd
-import numpy as np
-import tiktoken
-from psycopg2.extras import execute_values
 import re
 import json
 
-from models import Document, Response
-from util import num_tokens_from_string
-from constants import DB_HOST, AZURE_OPENAI_API_DEPLOYMENT_NAME, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_API_KEY
+from model.constants import AZURE_OPENAI_API_DEPLOYMENT_NAME, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_API_KEY
+from model.response import Response
 from db.repository import Repository
 
-class ChatCompletion:
+class OpenAi:
     def __init__(self):
         self.GPT35PROMPTPER1KTKN = 0.003
         self.GPT35COMPLETIONPER1KTKN = 0.004
@@ -41,21 +32,6 @@ class ChatCompletion:
         openai.api_type = 'azure'
         openai.api_version = AZURE_OPENAI_API_VERSION
 
-    def get_embedding_cost(self, num_tokens):
-        return num_tokens/1000*0.000096
-
-    def get_embedding(self, text:str, model='text-embedding-ada-002'):
-        while True:
-            print('text', text)
-            text = text.replace('\n', ' ')
-            try:
-                embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
-                break
-            except openai.error.RateLimitError:
-                print('retrying...')
-                time.sleep(1)
-        return embedding
-
     # Helper function: get text completion from OpenAI API
     # Note we're using the latest azure gpt-35-turbo-16k model
     def get_completion_from_messages(self, messages, model=AZURE_OPENAI_API_DEPLOYMENT_NAME, deployment_id=AZURE_OPENAI_API_DEPLOYMENT_NAME, temperature=0, max_tokens=1000):
@@ -70,6 +46,21 @@ class ChatCompletion:
         cost = response.usage.prompt_tokens / 1000.0 * self.GPT35PROMPTPER1KTKN + response.usage.completion_tokens / 1000.0 * self.GPT35COMPLETIONPER1KTKN
         #return 'message': response.choices[0].message['content'], 'cost': cost
         return Response(response.choices[0].message['content'],cost,response.choices[0].message['role'])
+
+    def get_embedding_cost(self, num_tokens):
+        return num_tokens/1000*0.000096
+
+    def get_embedding(self, text:str, model='text-embedding-ada-002'):
+        while True:
+            print('text', text)
+            text = text.replace('\n', ' ')
+            try:
+                embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
+                break
+            except openai.error.RateLimitError:
+                print('retrying...')
+                time.sleep(1)
+        return embedding
 
     def process_input_with_retrieval(self, benefit, user_input, add_guidance = True):
         delimiter = '```'

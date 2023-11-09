@@ -1,6 +1,6 @@
 import psycopg2
 import os, sys, getopt
-from constants import DB_HOST
+from model.constants import DB_HOST
 
 conn = psycopg2.connect(
     database='embeddings',

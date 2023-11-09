@@ -7,9 +7,9 @@ import os
 import json
 import uuid
 
-from create_table import create_table
-from constants import DB_HOST
-from models import Document
+from util.create_table import create_table
+from model.constants import DB_HOST
+from model.document import Document
 
 def adapt_dict(dict_var):
     return AsIs("'" + json.dumps(dict_var) + "'")
