@@ -85,6 +85,7 @@ def get_top3_similar_docs(benefit, query_embedding, conn):
     cur.execute('SELECT id,pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings WHERE benefit = \'' + benefit + '\' ORDER BY vector <=> %s LIMIT 8', (embedding_array,embedding_array,))
 
     top3_docs = cur.fetchall()
+    cur.close()
     return top3_docs
 
 # Helper function: get text completion from OpenAI API

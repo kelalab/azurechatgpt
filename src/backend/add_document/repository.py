@@ -29,6 +29,7 @@ class Repository:
           cur = self.conn.cursor()
           execute_values(cur, 'INSERT INTO ' + table + ' (id, chatthreadid, userid, pagecontent, metadata, vector, benefit) VALUES %s', self.extract_arguments(document))
           self.conn.commit()
+          cur.close()
         except psycopg2.errors.UndefinedTable:
           self.conn.rollback()
           create_table(self.conn, table)
@@ -41,4 +42,5 @@ class Repository:
        cur = self.conn.cursor()
        cur.execute('SELECT id, pagecontent FROM ' + table + ' WHERE id = \'' + id + '\'')
        ret = cur.fetchall()
+       cur.close()
        return ret
