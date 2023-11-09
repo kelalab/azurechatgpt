@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile
 from fastapi.staticfiles import StaticFiles
-from chat_completion import process_input_with_retrieval, get_completion_from_messages
+from chat_completion import ChatCompletion
 from add_document.add_document import AddDocument
 from models import Message, MessageList
 import uvicorn
@@ -8,14 +8,14 @@ import os
 from constants import UVICORN_HOST
 from pydantic import BaseModel
 from typing import List
-from add_document.repository import Repository
+from db.repository import Repository
 
 app = FastAPI()
 
 @app.post('/message')
 async def post_message(benefit:str, message: str):
     '''Function for sending a single message to openai'''
-    response = process_input_with_retrieval(benefit, message)
+    response = ChatCompletion().process_input_with_retrieval(benefit, message)
     return {'response': response.response, 'messages':response.messages}
 
 @app.post('/messages')
@@ -26,7 +26,7 @@ async def post_messages(data: MessageList):
     dict_data = []
     for d in data.data:
         dict_data.append({'role': d.role, 'content': d.content})
-    response = get_completion_from_messages(dict_data)
+    response = ChatCompletion().get_completion_from_messages(dict_data)
     return {'response': response.response, 'messages':data.data}
 
 @app.post('/add_document')

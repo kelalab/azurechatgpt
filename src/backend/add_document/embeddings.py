@@ -1,7 +1,8 @@
 import time
 import openai
 import openai.error
-from constants import AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_API_KEY
+
+from constants import *
 
 class Embeddings:
    def __init__(self):

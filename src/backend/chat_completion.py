@@ -8,185 +8,154 @@ import psycopg2
 import pandas as pd
 import numpy as np
 import tiktoken
-from pgvector.psycopg2 import register_vector
 from psycopg2.extras import execute_values
-from models import Document, Response
 import re
-from util import num_tokens_from_string
-from constants import DB_HOST, AZURE_OPENAI_API_DEPLOYMENT_NAME, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_API_KEY
 import json
 
-conn = psycopg2.connect(
-    database='embeddings',
-    user='pgvector',
-    password='hassusalakala',
-    host=DB_HOST
-)
+from models import Document, Response
+from util import num_tokens_from_string
+from constants import DB_HOST, AZURE_OPENAI_API_DEPLOYMENT_NAME, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_API_KEY
+from db.repository import Repository
 
-GPT35PROMPTPER1KTKN = 0.003
-GPT35COMPLETIONPER1KTKN = 0.004
+class ChatCompletion:
+    def __init__(self):
+        self.GPT35PROMPTPER1KTKN = 0.003
+        self.GPT35COMPLETIONPER1KTKN = 0.004
 
-# we have to be have some confidence that docs are relevant
-#
-distance_limit = 0.5
-#distance_limit = 0.17
-#distance_limit = 0.134
+        # we have to be have some confidence that docs are relevant
+        #
+        self.distance_limit = 0.5
+        #distance_limit = 0.17
+        #distance_limit = 0.134
 
-def get_embedding_cost(num_tokens):
-    return num_tokens/1000*0.000096
+        # Calculate the delay based on your rate limit
+        self.rate_limit_per_minute = 20
+        self.delay = 60.0 / self.rate_limit_per_minute
 
-# Calculate the delay based on your rate limit
-rate_limit_per_minute = 20
-delay = 60.0 / rate_limit_per_minute
+        #token_limit_per_minute = 240000
+        self.token_limit_per_minute = 180000
+        self.short_limit = 40000
 
-openai.api_key = AZURE_OPENAI_API_KEY
-openai.api_base = 'https://' + AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com' # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
-openai.api_type = 'azure'
-openai.api_version = AZURE_OPENAI_API_VERSION
+        openai.api_key = AZURE_OPENAI_API_KEY
+        openai.api_base = 'https://' + AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com' # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
+        openai.api_type = 'azure'
+        openai.api_version = AZURE_OPENAI_API_VERSION
 
-#token_limit_per_minute = 240000
-token_limit_per_minute = 180000
-short_limit = 40000
+    def get_embedding_cost(self, num_tokens):
+        return num_tokens/1000*0.000096
 
-def get_embedding(text:str, model='text-embedding-ada-002'):
-    while True:
-        print('text', text)
-        text = text.replace('\n', ' ')
-        try:
-            embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
-            break
-        except openai.error.RateLimitError:
-            print('retrying...')
-            time.sleep(1)
-    return embedding
+    def get_embedding(self, text:str, model='text-embedding-ada-002'):
+        while True:
+            print('text', text)
+            text = text.replace('\n', ' ')
+            try:
+                embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
+                break
+            except openai.error.RateLimitError:
+                print('retrying...')
+                time.sleep(1)
+        return embedding
 
-# Helper function: Get most similar documents from the database
-def get_top3_similar_docs(benefit, query_embedding, conn):
-    ''' Finds the three closest documents from the database based on K Nearest Neighbor vector comparison algorithm
-    
-    Parameters
-    ----------
-    query_embedding : []
-    conn : psycopg2.connection
+    # Helper function: get text completion from OpenAI API
+    # Note we're using the latest azure gpt-35-turbo-16k model
+    def get_completion_from_messages(self, messages, model=AZURE_OPENAI_API_DEPLOYMENT_NAME, deployment_id=AZURE_OPENAI_API_DEPLOYMENT_NAME, temperature=0, max_tokens=1000):
+        response = openai.ChatCompletion.create(
+            model=model,
+            messages=messages,
+            temperature=temperature, 
+            max_tokens=max_tokens, 
+            deployment_id=deployment_id
 
-    Returns
-    ----------
-    list
-       a list of top three document results
-    '''
-    embedding_array = np.array(query_embedding)
-    #print(query_embedding)
-    # Register pgvector extension
-    register_vector(conn)
-    cur = conn.cursor()
-    # Get the top 3 most similar documents using the KNN <=> operator
-    #cur.execute('SELECT pageContent,metadata,vector <=> %s AS distance FROM embeddings ORDER BY vector <=> %s LIMIT 3', (embedding_array,embedding_array,))
-    
-    cur.execute('SELECT id,pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings WHERE benefit = \'' + benefit + '\' ORDER BY vector <=> %s LIMIT 8', (embedding_array,embedding_array,))
+        )
+        cost = response.usage.prompt_tokens / 1000.0 * self.GPT35PROMPTPER1KTKN + response.usage.completion_tokens / 1000.0 * self.GPT35COMPLETIONPER1KTKN
+        #return 'message': response.choices[0].message['content'], 'cost': cost
+        return Response(response.choices[0].message['content'],cost,response.choices[0].message['role'])
 
-    top3_docs = cur.fetchall()
-    return top3_docs
+    def process_input_with_retrieval(self, benefit, user_input, add_guidance = True):
+        delimiter = '```'
 
-# Helper function: get text completion from OpenAI API
-# Note we're using the latest azure gpt-35-turbo-16k model
-def get_completion_from_messages(messages, model=AZURE_OPENAI_API_DEPLOYMENT_NAME, deployment_id=AZURE_OPENAI_API_DEPLOYMENT_NAME, temperature=0, max_tokens=1000):
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=messages,
-        temperature=temperature, 
-        max_tokens=max_tokens, 
-        deployment_id=deployment_id
+        #Step 1: Get documents related to the user input from database
+        related_docs = Repository().get_top3_similar_docs(benefit, self.get_embedding(user_input)['data'][0]['embedding'])
+        related_docs = list(filter(lambda x: x[3]<self.distance_limit,related_docs))
+        
+        content = ''
+        i=0
+        for rl in related_docs:
+            content += '<LÄHDE'+ str(i) + '> '+ re.sub(r'######', '', re.sub(r'\n', ' ',rl[1])) + '</LÄHDE'+ str(i) + '>'
+            i += 1
+        print('content',content)
+        system_message = f'''ARVIOI MITKÄ LÄHTEET vastaavat parhaiten käyttäjän esittämään kysymykseen. 
+                            Palauta vähintään kaksi lähdettä. 
+                            Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
+                            Vastauksesi saa sisältää vain listauksen lähteiden numeroista.
+                            [LÄHTEET]{content}[/LÄHTEET]'''
+                            # Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
 
-    )
-    cost = response.usage.prompt_tokens / 1000.0 * GPT35PROMPTPER1KTKN + response.usage.completion_tokens / 1000.0 * GPT35COMPLETIONPER1KTKN
-    #return 'message': response.choices[0].message['content'], 'cost': cost
-    return Response(response.choices[0].message['content'],cost,response.choices[0].message['role'])
+        messages = [
+            {'role': 'system', 'content': system_message},
+            {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
+        ]
+        openai_response = self.get_completion_from_messages(messages).response.message
 
-def process_input_with_retrieval(benefit, user_input, add_guidance = True):
-    delimiter = '```'
+        optimal_sources = openai_response.split(",")
+        optimal_src_indexes = []
+        for os in optimal_sources:
+            optimal_src_indexes.append(int(re.sub('LÄHDE','',os)))
 
-    #Step 1: Get documents related to the user input from database
-    related_docs = get_top3_similar_docs(benefit, get_embedding(user_input)['data'][0]['embedding'], conn)
-    related_docs = list(filter(lambda x: x[3]<distance_limit,related_docs))
-    
-    content = ''
-    i=0
-    for rl in related_docs:
-        content += '<LÄHDE'+ str(i) + '> '+ re.sub(r'######', '', re.sub(r'\n', ' ',rl[1])) + '</LÄHDE'+ str(i) + '>'
-        i += 1
-    print('content',content)
-    system_message = f'''ARVIOI MITKÄ LÄHTEET vastaavat parhaiten käyttäjän esittämään kysymykseen. 
-                         Palauta vähintään kaksi lähdettä. 
-                         Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
-                         Vastauksesi saa sisältää vain listauksen lähteiden numeroista.
-                         [LÄHTEET]{content}[/LÄHTEET]'''
-                        # Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
+        print('optimal_src_indexes:', optimal_src_indexes)
 
-    messages = [
-        {'role': 'system', 'content': system_message},
-        {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
-    ]
-    openai_response = get_completion_from_messages(messages).response.message
+        content = ''
+        #for rl in related_docs:
+        #    content += re.sub(r'\n', ' ',rl[1])
+        for idx in optimal_src_indexes:
+            content += re.sub(r'\n', ' ',related_docs[idx][1])
+        #TODO: siivoa dokumentit
 
-    optimal_sources = openai_response.split(",")
-    optimal_src_indexes = []
-    for os in optimal_sources:
-      optimal_src_indexes.append(int(re.sub('LÄHDE','',os)))
+        if add_guidance:    
+            #content = ''
+            system_message = f'''
+            Käyttäydy kuin Kelan asiantuntija. Pysy annetussa kontekstissa. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
+            Vastauksen muotoilun pitää olla:
+            1. Suositus
+            2. Perustelu suositukselle (annetusta kontekstista)
+            3. Listaus kaikista poikkeustilanteista, jotka löytyvät annetusta kontekstista
+            Annettu konteksti: [KONTEKSTI] {content} [/KONTEKSTI]
+            Mikäli et löydä vastausta annetusta kontekstista, kieltäydy kohteliaasti vastaamasta.
+            '''
+            # '''
+            # Käyttäydy kuin Kelan asiantuntija. Mikäli et löydä vastausta perustelua tukevasta tekstistä, kieltäydy kohteliaasti vastaamasta. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
+            # Vastauksen muotoilu tulee olla:
+            # 1. Suositus
+            # 2. Perustelu suositukselle.
+            # 3. Listaus kaikista poikkeustilanteista
+            # Perustelut löytyvät tästä tekstistä: ### {content} ###
+            # '''
+        else:
+            system_message = user_input
+        
+        system_message = re.sub(r'\n', ' ', system_message)
+        #    
+        # Prepare messages to pass to model
+        # We use a delimiter to help the model understand the where the user_input starts and ends
+        
+        messages = [
+            {'role': 'system', 'content': system_message},
+            {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
+        ]
 
-    print('optimal_src_indexes:', optimal_src_indexes)
+        openai_response = self.get_completion_from_messages(messages).response
+        
+        sources = []
+        for idx in optimal_src_indexes:
+            doc = related_docs[idx]
+            source = json.loads(doc[2])
+            source['id'] = doc[0]
+            sources.append(json.dumps(source))
+        #for doc in related_docs:
+        #    source = json.loads(doc[2])
+        #    source['id'] = doc[0]
+        #    sources.append(json.dumps(source))
 
-    content = ''
-    #for rl in related_docs:
-    #    content += re.sub(r'\n', ' ',rl[1])
-    for idx in optimal_src_indexes:
-        content += re.sub(r'\n', ' ',related_docs[idx][1])
-    #TODO: siivoa dokumentit
+        final_response = Response(openai_response.message, openai_response.cost, openai_response.role, sources, messages)
 
-    if add_guidance:    
-        #content = ''
-        system_message = f'''
-        Käyttäydy kuin Kelan asiantuntija. Pysy annetussa kontekstissa. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
-        Vastauksen muotoilun pitää olla:
-        1. Suositus
-        2. Perustelu suositukselle (annetusta kontekstista)
-        3. Listaus kaikista poikkeustilanteista, jotka löytyvät annetusta kontekstista
-        Annettu konteksti: [KONTEKSTI] {content} [/KONTEKSTI]
-        Mikäli et löydä vastausta annetusta kontekstista, kieltäydy kohteliaasti vastaamasta.
-        '''
-        # '''
-        # Käyttäydy kuin Kelan asiantuntija. Mikäli et löydä vastausta perustelua tukevasta tekstistä, kieltäydy kohteliaasti vastaamasta. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
-        # Vastauksen muotoilu tulee olla:
-        # 1. Suositus
-        # 2. Perustelu suositukselle.
-        # 3. Listaus kaikista poikkeustilanteista
-        # Perustelut löytyvät tästä tekstistä: ### {content} ###
-        # '''
-    else:
-        system_message = user_input
-    
-    system_message = re.sub(r'\n', ' ', system_message)
-    #    
-    # Prepare messages to pass to model
-    # We use a delimiter to help the model understand the where the user_input starts and ends
-    
-    messages = [
-        {'role': 'system', 'content': system_message},
-        {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
-    ]
-
-    openai_response = get_completion_from_messages(messages).response
-    
-    sources = []
-    for idx in optimal_src_indexes:
-        doc = related_docs[idx]
-        source = json.loads(doc[2])
-        source['id'] = doc[0]
-        sources.append(json.dumps(source))
-    #for doc in related_docs:
-    #    source = json.loads(doc[2])
-    #    source['id'] = doc[0]
-    #    sources.append(json.dumps(source))
-
-    final_response = Response(openai_response.message, openai_response.cost, openai_response.role, sources, messages)
-
-    return final_response
+        return final_response
