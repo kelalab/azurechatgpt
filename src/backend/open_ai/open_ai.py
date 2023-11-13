@@ -150,3 +150,18 @@ class OpenAi:
         final_response = Response(openai_response.message, openai_response.cost, openai_response.role, sources, messages)
 
         return final_response
+    
+    def combine_history(self, messages):
+        questions = list(messages)
+        print(questions)
+        new_message = questions.pop(-1)
+        system_message = f'''
+            Ottaen huomioon seuraavan keskusteluhistorian ja jatkokysymyksen, muotoile kysymys uudelleen itsenäiseksi kysymyksekseen, sen alkuperäisellä kielellä.
+            Keskusteluhistoria: {questions}
+            Jatkokysymys: {new_message}
+            '''
+        print(system_message)
+        openai_response = self.get_completion_from_messages([{'role':'system','content':system_message}]).response
+        print('openai combine response', openai_response.message)
+        return openai_response.message
+

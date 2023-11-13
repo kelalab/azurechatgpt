@@ -85,11 +85,16 @@ const ChatInput = (props: any) => {
       const my_msg: Message = { content: message, role: "user", visible: true };
       addMessage(my_msg);
       const messages_to_send = messages.map((m: Message) => {
-        return { content: m.content, role: m.role, cost: m.cost };
+        return {
+          content: m.content,
+          role: m.role,
+          cost: m.cost,
+          sources: m.sources,
+        };
       });
       messages_to_send.push({ content: my_msg.content, role: my_msg.role });
       console.log("messages_to_send", messages_to_send);
-      const response = await fetch(`/messages`, {
+      const response = await fetch(`/messages?benefit=${benefit}`, {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
@@ -108,6 +113,7 @@ const ChatInput = (props: any) => {
         content: json.response.message,
         cost: json.response.cost,
         role: json.response.role,
+        sources: json.response.sources,
         visible: true,
       };
       r_list.push(resp_msg);

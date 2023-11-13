@@ -19,14 +19,19 @@ async def post_message(benefit:str, message: str):
     return {'response': response.response, 'messages':response.messages}
 
 @app.post('/messages')
-async def post_messages(data: MessageList):
+async def post_messages(benefit: str, data: MessageList):
     '''Function for sending the message chain to openai to continue the conversation'''
     #TODO: this method is untested and unfinished, need to begin with getting the message chain in the response from the initial message
     # and then check what the completion returns and what we need to pass back in the response to continue with the conversation
     dict_data = []
     for d in data.data:
         dict_data.append({'role': d.role, 'content': d.content})
-    response = OpenAi().get_completion_from_messages(dict_data)
+    api = OpenAi()
+    #convert chat history and new question to a separated new question
+    combined = api.combine_history(dict_data)
+    #ask openai like we only got a single message in
+    response = OpenAi().process_input_with_retrieval(benefit, combined)
+    #response = OpenAi().get_completion_from_messages(dict_data)
     return {'response': response.response, 'messages':data.data}
 
 @app.post('/add_document')
