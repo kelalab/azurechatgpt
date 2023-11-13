@@ -156,9 +156,10 @@ class OpenAi:
         print(questions)
         new_message = questions.pop(-1)
         system_message = f'''
-            Ottaen huomioon seuraavan keskusteluhistorian ja jatkokysymyksen, muotoile kysymys uudelleen itsenäiseksi kysymyksekseen, sen alkuperäisellä kielellä.
+            Ottaen huomioon seuraavan keskusteluhistorian ja jatkokysymyksen, muotoile kysymys uudelleen ITSENÄISEKSI KYSYMYKSEKSI sen alkuperäisellä kielellä.
             Keskusteluhistoria: {questions}
             Jatkokysymys: {new_message}
+            Vastaa siis ANTAMALLA MINULLE ITSENÄINEN KYSYMYS.
             '''
         print(system_message)
         openai_response = self.get_completion_from_messages([{'role':'system','content':system_message}]).response
