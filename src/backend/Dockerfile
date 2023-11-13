@@ -1,6 +1,6 @@
-FROM redhat/ubi9
+FROM redhat/ubi9 as build_base
 
-COPY . /opt/src
+COPY ./requirements.txt ./opt/src/requirements.txt
 
 ARG AZURE_OPENAI_API_KEY
 ARG DB_HOST
@@ -14,5 +14,9 @@ WORKDIR /opt/src
 RUN yum install -y python3-pip
 
 RUN python3 -m pip install -r ./requirements.txt
+
+FROM build_base
+
+COPY . /opt/src
 
 CMD env && python3 main.py

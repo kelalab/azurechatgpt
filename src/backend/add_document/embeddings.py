@@ -15,9 +15,10 @@ class Embeddings:
       text = text.replace('\n', ' ')
       while True:
          try:
-            embedding = open_ai.Embedding.create(input = [text], model=model, deployment_id=model)
+            #embedding = open_ai.Embedding.create(input = [text], model=model, deployment_id=model)
+            embedding = open_ai.get_embedding(text)
             break
-         except open_ai.error.RateLimitError as e:
+         except openai.error.RateLimitError as e:
             print('retrying...', e)
             time.sleep(1)
 

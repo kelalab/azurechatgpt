@@ -38,6 +38,8 @@ const ChatInput = (props: any) => {
 
   const sendMessage = async (message: string) => {
     console.log("sendMessage", message);
+    // if we are waiting for response we shouldn't be able to send another message
+    if (loading) return;
     if (messages.length === 0) {
       const my_msg: Message = { content: message, role: "user", visible: true };
       addMessage(my_msg);
@@ -83,7 +85,7 @@ const ChatInput = (props: any) => {
       const my_msg: Message = { content: message, role: "user", visible: true };
       addMessage(my_msg);
       const messages_to_send = messages.map((m: Message) => {
-        return { content: m.content, role: m.role };
+        return { content: m.content, role: m.role, cost: m.cost };
       });
       messages_to_send.push({ content: my_msg.content, role: my_msg.role });
       console.log("messages_to_send", messages_to_send);
