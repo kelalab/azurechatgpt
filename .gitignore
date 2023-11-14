@@ -34,6 +34,7 @@ src/backend/env.py
 
 # data
 *.dita
+*.docx
 
 __pycache__
 *.sh

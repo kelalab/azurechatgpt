@@ -1,6 +1,8 @@
 import io
+import filetype
 
-from add_document.splitter import Splitter
+from add_document.dita.splitter import Splitter
+from add_document.docx.parser import DocxParser
 from add_document.embeddings import Embeddings
 from db.repository import Repository
 from model.document import Document
@@ -13,6 +15,37 @@ class AddDocument:
         self.content = io.BytesIO(content)
 
     def generate_embeddings(self, benefit):
+        try:
+
+            if self.file_name.endswith('.dita'):
+                # dita
+                return self.handle_dita(benefit)
+            else:
+                kind = filetype.guess(self.content)
+                if kind:
+                    if 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' == kind.mime:
+                        # docx
+                        return self.handle_docx(benefit, kind.mime)
+                
+                return {'response': 'error', 'mime': 'unknown'}
+
+        except Exception as e:
+            print(f'Unexpected {0}', e)
+            return {'response': 'error', 'details': e}
+
+    def handle_docx(self, benefit, mime):
+        texts = DocxParser().parse(self.content)
+
+        for text in texts:
+            metadata = text[0]
+            page_content = text[1]
+            em = self.embed.embed(page_content)
+            vector = em.data[0].embedding
+            self.repo.insert(Document(metadata, page_content, vector, benefit))
+
+        return {'response': 'ok', 'mime': mime}
+
+    def handle_dita(self, benefit):
         texts = Splitter().split(self.content)
 
         for text in texts:
@@ -22,4 +55,4 @@ class AddDocument:
             vector = em.data[0].embedding
             self.repo.insert(Document(metadata, page_content, vector, benefit))
             
-        return {'response': 'ok'}
+        return {'response': 'ok', 'mime': 'dita'}

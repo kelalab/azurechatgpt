@@ -7,7 +7,6 @@ import os
 import json
 import uuid
 
-from util.create_table import create_table
 from model.constants import DB_HOST
 from model.document import Document
 
@@ -22,12 +21,25 @@ register_adapter(np.ndarray, addapt_numpy_array)
 
 class Repository:
     def __init__(self):
-        self.conn = psycopg2.connect(
-            database='embeddings',
-            user='pgvector',
-            password='hassusalakala',
-            host=DB_HOST
-        )
+        self.conn = psycopg2.connect(database='embeddings', user='pgvector', password='hassusalakala', host=DB_HOST)
+
+    def create_table(self, name='embeddings'):
+        cur = self.conn.cursor()
+        table_create_command = f'''
+        CREATE EXTENSION IF NOT EXISTS vector;
+        CREATE TABLE {name} (
+            id text primary key, 
+            chatThreadId text,
+            userId text,
+            pageContent text,
+            metadata text,
+            vector vector(1536),
+            benefit text
+            );
+            '''
+        cur.execute(table_create_command)
+        self.conn.commit()
+        cur.close()
 
     def insert(self, document: Document, table = 'clause_embeddings'):
         try:
@@ -37,7 +49,7 @@ class Repository:
           cur.close()
         except psycopg2.errors.UndefinedTable:
           self.conn.rollback()
-          create_table(self.conn, table)
+          self.create_table(table)
           self.insert(document, table)
 
     def extract_arguments(self, document: Document):
@@ -47,6 +59,7 @@ class Repository:
        cur = self.conn.cursor()
        cur.execute('SELECT id, pagecontent FROM ' + table + ' WHERE id = \'' + id + '\'')
        ret = cur.fetchall()
+       cur.close()
        return ret
     
     # Helper function: Get most similar documents from the database
@@ -74,4 +87,5 @@ class Repository:
         cur.execute('SELECT id,pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings WHERE benefit = \'' + benefit + '\' ORDER BY vector <=> %s LIMIT 8', (embedding_array,embedding_array,))
 
         top3_docs = cur.fetchall()
+        cur.close()
         return top3_docs
