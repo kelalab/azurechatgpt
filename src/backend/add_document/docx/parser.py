@@ -16,7 +16,7 @@ class DocxParser:
                 keys = tuple(text)
                 continue
 
-            # Construct a dictionary for this row, mapping
+            # Construct a list for this row, mapping
             # keys to values for this row
             row_data = list(zip(keys, text))
             
