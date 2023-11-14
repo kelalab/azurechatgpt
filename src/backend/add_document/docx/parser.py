@@ -1,28 +1,43 @@
 from docx import Document
 
 class DocxParser:
-    def parse(self, input):
-        doc = Document(input)
-        table = doc.tables[0]
-        data = []
-
-        headers = ''
-        for i, row in enumerate(table.rows):
-            text = (cell.text for cell in row.cells)
-
-            # Establish the mapping based on the first row
-            # headers; these will become the keys of our dictionary
-            if i == 0:
-                keys = tuple(text)
+    def generate_headers(self, depth, titles):
+        header = {}
+        header_val = 1
+        for title in titles:
+            if len(title) == 0:
                 continue
+            header['Header ' + str(header_val)] = title
+            header_val = header_val + 1
+        
+        return header
 
-            # Construct a list for this row, mapping
-            # keys to values for this row
-            row_data = list(zip(keys, text))
-            
-            if (i % 2) == 0:
-                data.append((headers, row_data[0][1]))
-            else:
-                headers = {'Header 1': row_data[0][0], 'Header2': row_data[0][1]}
+    def parse(self, input):
+        data = []
+        doc = Document(input)
+
+        for table in doc.tables:
+            titles = ['','','','','','']
+            depth = 0
+            last_depth = 0
+            text = ''
+            for i, row in enumerate(table.rows):
+                p = row.cells[0].paragraphs[0]
+
+                if p.style.name.startswith('Heading'):
+                    if depth > 0:
+                        data.append((self.generate_headers(depth, titles), text))
+                        text = ''
+
+                    depth = int(row.cells[0].paragraphs[0].style.name[-1])
+                    if depth < last_depth:
+                        for i in range(depth, len(titles)):
+                            titles[i] = ''
+
+                    last_depth = depth
+                    title = row.cells[0].paragraphs[0].text
+                    titles[depth] = title
+                else:
+                    text = text + '\n'.join(cell.text for cell in row.cells)
 
         return data
