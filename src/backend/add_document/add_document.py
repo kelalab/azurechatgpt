@@ -1,5 +1,6 @@
 import io
 import filetype
+import traceback
 
 from add_document.dita.splitter import Splitter
 from add_document.docx.parser import DocxParser
@@ -16,7 +17,6 @@ class AddDocument:
 
     def generate_embeddings(self, benefit):
         try:
-
             if self.file_name.endswith('.dita'):
                 # dita
                 return self.handle_dita(benefit)
@@ -30,7 +30,7 @@ class AddDocument:
                 return {'response': 'error', 'mime': 'unknown'}
 
         except Exception as e:
-            print(f'Unexpected {0}', e)
+            traceback.print_exc()
             return {'response': 'error', 'details': e}
 
     def handle_docx(self, benefit, mime):

@@ -26,7 +26,8 @@ class DocxParser:
 
                 if p.style.name.startswith('Heading'):
                     if depth > 0:
-                        data.append((self.generate_headers(depth, titles), text))
+                        if len(text) > 0:
+                            data.append((self.generate_headers(depth, titles), text))
                         text = ''
 
                     depth = int(row.cells[0].paragraphs[0].style.name[-1])
