@@ -35,9 +35,9 @@ async def post_messages(benefit: str, data: MessageList):
     return {'response': response.response, 'messages':data.data}
 
 @app.post('/add_document')
-async def add_document(benefit: str, file: UploadFile):
+async def add_document(benefit: str, file: UploadFile, max_depth = 0):
     content = await file.read()
-    ad = AddDocument(file.filename, content)
+    ad = AddDocument(file.filename, content, int(max_depth))
     return ad.generate_embeddings(benefit)
 
 @app.get('/get_source')
