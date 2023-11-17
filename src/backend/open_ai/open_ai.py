@@ -15,7 +15,7 @@ class OpenAi:
 
         # we have to be have some confidence that docs are relevant
         #
-        self.distance_limit = 0.5
+        self.distance_limit = 0.22
         #distance_limit = 0.17
         #distance_limit = 0.134
 
@@ -64,6 +64,7 @@ class OpenAi:
 
     def process_input_with_retrieval(self, benefit, user_input, add_guidance = True):
         delimiter = '```'
+        sources = []
 
         #Step 1: Get documents related to the user input from database
         related_docs = Repository().get_top3_similar_docs(benefit, self.get_embedding(user_input)['data'][0]['embedding'])
@@ -71,37 +72,44 @@ class OpenAi:
         
         content = ''
         i=0
-        for rl in related_docs:
-            content += '<LÄHDE'+ str(i) + '> '+ re.sub(r'######', '', re.sub(r'\n', ' ',rl[1])) + '</LÄHDE'+ str(i) + '>'
-            i += 1
-        print('content',content)
-        system_message = f'''ARVIOI MITKÄ LÄHTEET vastaavat parhaiten käyttäjän esittämään kysymykseen. 
-                            Palauta vähintään kaksi lähdettä. 
-                            Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
-                            Vastauksesi saa sisältää vain listauksen lähteiden numeroista.
-                            [LÄHTEET]{content}[/LÄHTEET]'''
-                            # Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
+        if len(related_docs) >= 2:
+            for rl in related_docs:
+                content += '<LÄHDE'+ str(i) + '> '+ re.sub(r'######', '', re.sub(r'\n', ' ',rl[1])) + '</LÄHDE'+ str(i) + '>'
+                i += 1
+            print('content',content)
+            system_message = f'''ARVIOI MITKÄ LÄHTEET vastaavat parhaiten käyttäjän esittämään kysymykseen. 
+                                Palauta vähintään kaksi lähdettä. 
+                                Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
+                                Vastauksesi saa sisältää vain listauksen lähteiden numeroista.
+                                [LÄHTEET]{content}[/LÄHTEET]'''
+                                # Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
 
-        messages = [
-            {'role': 'system', 'content': system_message},
-            {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
-        ]
-        openai_response = self.get_completion_from_messages(messages).response.message
+            messages = [
+                {'role': 'system', 'content': system_message},
+                {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
+            ]
+            openai_response = self.get_completion_from_messages(messages).response.message
 
-        optimal_sources = openai_response.split(",")
-        optimal_src_indexes = []
-        for os in optimal_sources:
-            optimal_src_indexes.append(int(re.sub('LÄHDE','',os)))
+            optimal_sources = openai_response.split(",")
+            optimal_src_indexes = []
+            for os in optimal_sources:
+                optimal_src_indexes.append(int(re.sub('LÄHDE','',os)))
 
-        print('optimal_src_indexes:', optimal_src_indexes)
+            print('optimal_src_indexes:', optimal_src_indexes)
 
-        content = ''
-        #for rl in related_docs:
-        #    content += re.sub(r'\n', ' ',rl[1])
-        for idx in optimal_src_indexes:
-            content += re.sub(r'\n', ' ',related_docs[idx][1])
-        #TODO: siivoa dokumentit
+            content = ''
+            
+            for idx in optimal_src_indexes:
+                content += re.sub(r'\n', ' ',related_docs[idx][1])
 
+            for idx in optimal_src_indexes:
+                doc = related_docs[idx]
+                source = json.loads(doc[2])
+                source['id'] = doc[0]
+                sources.append(json.dumps(source))
+        else:
+          for rl in related_docs:
+            content += re.sub(r'\n', ' ',rl[1])
         if add_guidance:    
             #content = ''
             system_message = f'''
@@ -123,6 +131,10 @@ class OpenAi:
             # '''
         else:
             system_message = user_input
+            for doc in related_docs:
+                source = json.loads(doc[2])
+                source['id'] = doc[0]
+                sources.append(json.dumps(source))
         
         system_message = re.sub(r'\n', ' ', system_message)
         #    
@@ -136,16 +148,9 @@ class OpenAi:
 
         openai_response = self.get_completion_from_messages(messages).response
         
-        sources = []
-        for idx in optimal_src_indexes:
-            doc = related_docs[idx]
-            source = json.loads(doc[2])
-            source['id'] = doc[0]
-            sources.append(json.dumps(source))
-        #for doc in related_docs:
-        #    source = json.loads(doc[2])
-        #    source['id'] = doc[0]
-        #    sources.append(json.dumps(source))
+        
+        
+        
 
         final_response = Response(openai_response.message, openai_response.cost, openai_response.role, sources, messages)
 
