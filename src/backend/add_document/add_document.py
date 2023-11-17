@@ -9,11 +9,12 @@ from db.repository import Repository
 from model.document import Document
 
 class AddDocument:
-    def __init__(self, file_name, content):
+    def __init__(self, file_name, content, max_depth):
         self.embed = Embeddings()
         self.repo = Repository()
         self.file_name = file_name
         self.content = io.BytesIO(content)
+        self.max_depth = max_depth
 
     def generate_embeddings(self, benefit):
         try:
@@ -27,14 +28,14 @@ class AddDocument:
                         # docx
                         return self.handle_docx(benefit, kind.mime)
                 
-                return {'response': 'error', 'mime': 'unknown'}
+                return {'status': 'error', 'mime': 'unknown'}
 
         except Exception as e:
             traceback.print_exc()
-            return {'response': 'error', 'details': e}
+            return {'status': 'error', 'details': str(e)}
 
     def handle_docx(self, benefit, mime):
-        texts = DocxParser().parse(self.content)
+        texts = DocxParser().parse(self.content, self.max_depth)
 
         for text in texts:
             metadata = text[0]
@@ -43,7 +44,7 @@ class AddDocument:
             vector = em.data[0].embedding
             self.repo.insert(Document(metadata, page_content, vector, benefit))
 
-        return {'response': 'ok', 'mime': mime}
+        return {'status': 'success', 'mime': mime, 'rows_inserted': len(texts)}
 
     def handle_dita(self, benefit):
         texts = Splitter().split(self.content)
@@ -55,4 +56,4 @@ class AddDocument:
             vector = em.data[0].embedding
             self.repo.insert(Document(metadata, page_content, vector, benefit))
             
-        return {'response': 'ok', 'mime': 'dita'}
+        return {'status': 'success', 'mime': 'dita', 'rows_inserted': len(texts)}
