@@ -80,7 +80,7 @@ class OpenAi:
             system_message = f'''ARVIOI MITKÄ LÄHTEET vastaavat parhaiten käyttäjän esittämään kysymykseen. 
                                 Palauta vähintään kaksi lähdettä. 
                                 Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
-                                Vastauksesi saa sisältää vain listauksen lähteiden numeroista.
+                                Vastauksesi saa sisältää VAIN listauksen LÄHTEIDEN NUMEROISTA.
                                 [LÄHTEET]{content}[/LÄHTEET]'''
                                 # Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
 
@@ -89,6 +89,7 @@ class OpenAi:
                 {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
             ]
             openai_response = self.get_completion_from_messages(messages).response.message
+            print('source response:', openai_response)
 
             optimal_sources = openai_response.split(",")
             optimal_src_indexes = []
