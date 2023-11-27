@@ -8,6 +8,8 @@ from model.constants import AZURE_OPENAI_API_DEPLOYMENT_NAME, AZURE_OPENAI_API_I
 from model.response import Response
 from db.repository import Repository
 
+UNABLE_TO_ASWER = ['en pysty', 'en voi', 'pahoittelut']
+
 class OpenAi:
     def __init__(self):
         self.GPT35PROMPTPER1KTKN = 0.003
@@ -15,7 +17,7 @@ class OpenAi:
 
         # we have to be have some confidence that docs are relevant
         #
-        self.distance_limit = 0.22
+        self.distance_limit = 0.205
         #distance_limit = 0.17
         #distance_limit = 0.134
 
@@ -43,6 +45,7 @@ class OpenAi:
             deployment_id=deployment_id
 
         )
+        print('response', response)
         cost = response.usage.prompt_tokens / 1000.0 * self.GPT35PROMPTPER1KTKN + response.usage.completion_tokens / 1000.0 * self.GPT35COMPLETIONPER1KTKN
         #return 'message': response.choices[0].message['content'], 'cost': cost
         return Response(response.choices[0].message['content'],cost,response.choices[0].message['role'])
@@ -68,8 +71,11 @@ class OpenAi:
 
         #Step 1: Get documents related to the user input from database
         related_docs = Repository().get_top3_similar_docs(benefit, self.get_embedding(user_input)['data'][0]['embedding'])
+        for rl in related_docs:
+            print(rl[3])
+
         related_docs = list(filter(lambda x: x[3]<self.distance_limit,related_docs))
-        
+
         content = ''
         i=0
         if len(related_docs) >= 2:
@@ -147,14 +153,15 @@ class OpenAi:
             {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
         ]
 
-        openai_response = self.get_completion_from_messages(messages).response
+        openai_response = self.get_completion_from_messages(messages).response        
         
-        
-        
-        
-
+        for substr in UNABLE_TO_ASWER:
+            if openai_response.message.lower().find(substr) > -1:
+                print('Could not answer')
+                final_response = Response(openai_response.message, openai_response.cost, openai_response.role, list(), messages)
+                return final_response
+         
         final_response = Response(openai_response.message, openai_response.cost, openai_response.role, sources, messages)
-
         return final_response
     
     def combine_history(self, messages):
