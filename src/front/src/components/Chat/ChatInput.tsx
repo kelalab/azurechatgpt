@@ -24,6 +24,8 @@ const ChatInput = (props: any) => {
     messages,
     loading,
     setLoading,
+    thread,
+    setThread,
   } = props;
   const [input, setInput] = useState("");
   const [benefit, setBenefit] = useState("Toimeentulotuki");
@@ -80,6 +82,7 @@ const ChatInput = (props: any) => {
       };
       addMessage(resp_msg);
       setInput("");
+      setThread(json.session_uuid);
       setLoading(false);
     } else {
       const my_msg: Message = { content: message, role: "user", visible: true };
@@ -94,14 +97,17 @@ const ChatInput = (props: any) => {
       });
       messages_to_send.push({ content: my_msg.content, role: my_msg.role });
       console.log("messages_to_send", messages_to_send);
-      const response = await fetch(`/messages?benefit=${benefit}`, {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-        body: JSON.stringify({ data: messages_to_send }),
-      });
+      const response = await fetch(
+        `/messages?benefit=${benefit}&session_uuid=${thread}`,
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+          body: JSON.stringify({ data: messages_to_send }),
+        }
+      );
       const json = await response.json();
       const json_msgs: Message[] = json.messages;
       // clear our message list

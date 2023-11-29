@@ -2,6 +2,7 @@ import { PropsWithChildren } from "react";
 import { Message } from "../../types";
 import { AI_NAME } from "../../constants";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import { FaThumbsUp, FaThumbsDown } from "react-icons/fa6";
 import "react-loading-skeleton/dist/skeleton.css";
 
 interface CostProps extends PropsWithChildren {
@@ -34,7 +35,21 @@ const MessageBox = (props: MessageBoxProps) => {
   return (
     <SkeletonTheme baseColor="#202020" highlightColor="#444">
       <div className="border-2 rounded-b-xl rounded-tr-xl w-4/5 p-4 text-white">
-        <div className="font-bold text-sky-600 p-2">{user}</div>
+        <div className="font-bold text-sky-600 p-2">
+          {user}
+          <div className="inline-flex gap-4 ml-24">
+            <span className="text-white text-sm">Arvioi vastaus: </span>
+            <button>
+              <FaThumbsDown color="red" />
+            </button>
+            <button className="-rotate-90">
+              <FaThumbsUp color="yellow" />
+            </button>
+            <button>
+              <FaThumbsUp color="green" />
+            </button>
+          </div>
+        </div>
         <div className="p-2">
           {skeleton ? (
             <>
@@ -56,7 +71,7 @@ const MessageBox = (props: MessageBoxProps) => {
 };
 
 const ChatHistory = (props: any) => {
-  const { messages, setActiveSource, loading } = props;
+  const { messages, setActiveSource, loading, setThread } = props;
   console.log("messages: ", messages);
 
   const fetchSource = async (id: String) => {
@@ -77,8 +92,8 @@ const ChatHistory = (props: any) => {
             return (
               <MessageBox key={"msg-" + idx} user={AI_NAME}>
                 <div>
-                  {message.content.split("\n").map((m) => {
-                    return <p>{m}</p>;
+                  {message.content.split("\n").map((m, idx) => {
+                    return <p key={`p-${idx}`}>{m}</p>;
                   })}
                 </div>
                 <div className="text-amber-500 text-sm ">
@@ -94,7 +109,8 @@ const ChatHistory = (props: any) => {
                           onClick={() => fetchSource(id)}
                           href={"#"}
                         >
-                          {json["Header 2"]}
+                          {json["Header 1"]}
+                          {json["Header 2"] && "/" + json["Header 2"]}
                           {json["Header 3"] && "/" + json["Header 3"]}
                           {json["Header 4"] && "/" + json["Header 4"]}
                           {json["Header 5"] && "/" + json["Header 5"]}
