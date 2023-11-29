@@ -31,7 +31,7 @@ async def post_message(benefit:str, message: str, session_uuid = None):
     response = OpenAi().process_input_with_retrieval(benefit, message)
 
     # Save gpt output to db
-    repo.insert_conv(session_uuid, benefit, response.response.message)
+    response.response.uuid = repo.insert_conv(session_uuid, benefit, response.response.message)
 
     return {'session_uuid': session_uuid, 'response': response.response, 'messages':response.messages}
 
@@ -57,9 +57,16 @@ async def post_messages(benefit: str, data: MessageList, session_uuid = None):
     #response = OpenAi().get_completion_from_messages(dict_data)
 
     # Save gpt output to db
-    repo.insert_conv(session_uuid, benefit, response.response.message)
+    response.response.uuid = repo.insert_conv(session_uuid, benefit, response.response.message)
 
     return {'session_uuid': session_uuid, 'response': response.response, 'messages':data.data}
+
+@app.get('/thumb')
+async def thumb(message_id: str, thumb: int):
+    if Repository().update_thumb(message_id, thumb):
+        return {'status': 'success'}
+    else:
+        return {'status': 'error', 'desc': 'Message_id not found.'}
 
 @app.post('/add_document')
 async def add_document(benefit: str, file: UploadFile, max_depth = 0):

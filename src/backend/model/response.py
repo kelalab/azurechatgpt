@@ -1,4 +1,5 @@
 class _Response:
+    uuid=''
     message=''
     cost=0
     sources=[]

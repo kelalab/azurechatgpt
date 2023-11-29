@@ -50,7 +50,8 @@ class Repository:
             session_uuid text,
             sequence integer NOT NULL DEFAULT 0,
             benefit text,
-            message text
+            message text,
+            thumb integer
             );
             '''
         cur.execute(table_create_command)
@@ -86,10 +87,26 @@ class Repository:
             cur.execute(sql)
             self.conn.commit()
             cur.close()
+
+            return id
         except psycopg2.errors.UndefinedTable:
             self.conn.rollback()
             self.create_conversations_table()
-            self.insert_conv(session_uuid, benefit, message)
+            return self.insert_conv(session_uuid, benefit, message)
+
+    def update_thumb(self, message_uuid, thumb):
+        try:
+            cur = self.conn.cursor()
+            sql = SQL('UPDATE conversations SET thumb = {1} WHERE id = \'{0}\''.format(message_uuid, thumb))
+            cur.execute(sql)
+            rowcount = cur.rowcount
+            self.conn.commit()
+            cur.close()
+            return rowcount > 0
+        except psycopg2.errors.UndefinedTable:
+            self.conn.rollback()
+            self.create_conversations_table()
+            return self.update_thumb(message_uuid, thumb)
 
     def extract_arguments(self, document: Document):
         return [[str(uuid.uuid4()).replace('-',''), document.chatthreadid, document.userid, document.pageContent, document.metadata, document.vector, document.benefit]]
