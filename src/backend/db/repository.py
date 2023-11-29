@@ -2,6 +2,7 @@ import psycopg2
 from psycopg2.extras import execute_values
 from psycopg2.extensions import register_adapter, AsIs
 from pgvector.psycopg2 import register_vector
+from psycopg2.sql import SQL
 import numpy as np
 import os
 import json
@@ -41,16 +42,54 @@ class Repository:
         self.conn.commit()
         cur.close()
 
+    def create_conversations_table(self):
+        cur = self.conn.cursor()
+        table_create_command = f'''
+        CREATE TABLE conversations (
+            id text primary key,
+            session_uuid text,
+            sequence integer NOT NULL DEFAULT 0,
+            benefit text,
+            message text
+            );
+            '''
+        cur.execute(table_create_command)
+        self.conn.commit()
+        cur.close()
+
     def insert(self, document: Document, table = 'clause_embeddings'):
         try:
-          cur = self.conn.cursor()
-          execute_values(cur, 'INSERT INTO ' + table + ' (id, chatthreadid, userid, pagecontent, metadata, vector, benefit) VALUES %s', self.extract_arguments(document))
-          self.conn.commit()
-          cur.close()
+            cur = self.conn.cursor()
+            execute_values(cur, 'INSERT INTO ' + table + ' (id, chatthreadid, userid, pagecontent, metadata, vector, benefit) VALUES %s', self.extract_arguments(document))
+            self.conn.commit()
+            cur.close()
         except psycopg2.errors.UndefinedTable:
-          self.conn.rollback()
-          self.create_table(table)
-          self.insert(document, table)
+            self.conn.rollback()
+            self.create_table(table)
+            self.insert(document, table)
+
+    def insert_conv(self, session_uuid: str, benefit: str, message: str):
+        try:
+            cur = self.conn.cursor()
+
+            sql = SQL('SELECT MAX(sequence)+1 FROM conversations WHERE session_uuid = \'{0}\''.format(session_uuid))
+            cur.execute(sql)
+            result = cur.fetchall()
+
+            id = str(uuid.uuid4())
+            try:
+                int(result[0][0])
+                sql = SQL('INSERT INTO conversations (id, session_uuid, sequence, benefit, message) VALUES (\'{0}\', \'{1}\', (SELECT MAX(sequence)+1 FROM conversations WHERE session_uuid = \'{1}\'), \'{2}\', \'{3}\')'.format(id, session_uuid, benefit, message))
+            except:
+                sql = SQL('INSERT INTO conversations (id, session_uuid, sequence, benefit, message) VALUES (\'{0}\', \'{1}\', 0, \'{2}\', \'{3}\')'.format(id, session_uuid, benefit, message))
+
+            cur.execute(sql)
+            self.conn.commit()
+            cur.close()
+        except psycopg2.errors.UndefinedTable:
+            self.conn.rollback()
+            self.create_conversations_table()
+            self.insert_conv(session_uuid, benefit, message)
 
     def extract_arguments(self, document: Document):
         return [[str(uuid.uuid4()).replace('-',''), document.chatthreadid, document.userid, document.pageContent, document.metadata, document.vector, document.benefit]]

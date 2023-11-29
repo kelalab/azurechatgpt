@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile
 from fastapi.staticfiles import StaticFiles
+import uuid
 import uvicorn
 import os
 
@@ -12,15 +13,32 @@ from model.message import MessageList
 
 app = FastAPI()
 
+def reuse_or_generate_uuid(session_uuid):
+    if session_uuid:
+        return session_uuid
+    else:
+        return uuid.uuid4()
+
 @app.post('/message')
-async def post_message(benefit:str, message: str):
+async def post_message(benefit:str, message: str, session_uuid = None):
     '''Function for sending a single message to openai'''
+    session_uuid = reuse_or_generate_uuid(session_uuid)
+
+    repo = Repository()
+    # Save user input to db
+    repo.insert_conv(session_uuid, benefit, message)
+
     response = OpenAi().process_input_with_retrieval(benefit, message)
-    return {'response': response.response, 'messages':response.messages}
+
+    # Save gpt output to db
+    repo.insert_conv(session_uuid, benefit, response.response.message)
+
+    return {'session_uuid': session_uuid, 'response': response.response, 'messages':response.messages}
 
 @app.post('/messages')
-async def post_messages(benefit: str, data: MessageList):
+async def post_messages(benefit: str, data: MessageList, session_uuid = None):
     '''Function for sending the message chain to openai to continue the conversation'''
+    session_uuid = reuse_or_generate_uuid(session_uuid)
     #TODO: this method is untested and unfinished, need to begin with getting the message chain in the response from the initial message
     # and then check what the completion returns and what we need to pass back in the response to continue with the conversation
     dict_data = []
@@ -30,9 +48,18 @@ async def post_messages(benefit: str, data: MessageList):
     #convert chat history and new question to a separated new question
     combined = api.combine_history(dict_data)
     #ask openai like we only got a single message in
+
+    repo = Repository()
+    # Save user input to db
+    repo.insert_conv(session_uuid, benefit, combined)
+
     response = OpenAi().process_input_with_retrieval(benefit, combined)
     #response = OpenAi().get_completion_from_messages(dict_data)
-    return {'response': response.response, 'messages':data.data}
+
+    # Save gpt output to db
+    repo.insert_conv(session_uuid, benefit, response.response.message)
+
+    return {'session_uuid': session_uuid, 'response': response.response, 'messages':data.data}
 
 @app.post('/add_document')
 async def add_document(benefit: str, file: UploadFile, max_depth = 0):
