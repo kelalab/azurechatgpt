@@ -20,7 +20,7 @@ def reuse_or_generate_uuid(session_uuid):
         return uuid.uuid4()
 
 @app.post('/message')
-async def post_message(benefit:str, message: str, session_uuid = None):
+def post_message(benefit:str, message: str, session_uuid = None):
     '''Function for sending a single message to openai'''
     session_uuid = reuse_or_generate_uuid(session_uuid)
 
@@ -36,7 +36,7 @@ async def post_message(benefit:str, message: str, session_uuid = None):
     return {'session_uuid': session_uuid, 'response': response.response, 'messages':response.messages}
 
 @app.post('/messages')
-async def post_messages(benefit: str, data: MessageList, session_uuid = None):
+def post_messages(benefit: str, data: MessageList, session_uuid = None):
     '''Function for sending the message chain to openai to continue the conversation'''
     session_uuid = reuse_or_generate_uuid(session_uuid)
     #TODO: this method is untested and unfinished, need to begin with getting the message chain in the response from the initial message
@@ -62,24 +62,24 @@ async def post_messages(benefit: str, data: MessageList, session_uuid = None):
     return {'session_uuid': session_uuid, 'response': response.response, 'messages':data.data}
 
 @app.get('/thumb')
-async def thumb(message_id: str, thumb: int):
+def thumb(message_id: str, thumb: int):
     if Repository().update_thumb(message_id, thumb):
         return {'status': 'success'}
     else:
         return {'status': 'error', 'desc': 'Message_id not found.'}
 
 @app.post('/add_document')
-async def add_document(benefit: str, file: UploadFile, max_depth = 0):
-    content = await file.read()
+def add_document(benefit: str, file: UploadFile, max_depth = 0):
+    content = file.read()
     ad = AddDocument(file.filename, content, int(max_depth))
     return ad.generate_embeddings(benefit)
 
 @app.get('/get_source')
-async def get_source(id: str):
+def get_source(id: str):
     return Repository().get_source(id)
 
 @app.post("/dummypath")
-async def get_body(data: GraphList):
+def get_body(data: GraphList):
     return data
 
 app.mount("/", StaticFiles(directory="static", html="true"), name="static")
