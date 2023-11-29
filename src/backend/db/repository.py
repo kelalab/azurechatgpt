@@ -7,6 +7,7 @@ import numpy as np
 import os
 import json
 import uuid
+import datetime
 
 from model.constants import DB_HOST
 from model.document import Document
@@ -47,6 +48,7 @@ class Repository:
         table_create_command = f'''
         CREATE TABLE conversations (
             id text primary key,
+            timestamp timestamptz,
             session_uuid text,
             sequence integer NOT NULL DEFAULT 0,
             benefit text,
@@ -78,11 +80,12 @@ class Repository:
             result = cur.fetchall()
 
             id = str(uuid.uuid4())
+            ts = datetime.datetime.now()
             try:
                 int(result[0][0])
-                sql = SQL('INSERT INTO conversations (id, session_uuid, sequence, benefit, message) VALUES (\'{0}\', \'{1}\', (SELECT MAX(sequence)+1 FROM conversations WHERE session_uuid = \'{1}\'), \'{2}\', \'{3}\')'.format(id, session_uuid, benefit, message))
+                sql = SQL('INSERT INTO conversations (id, timestamp, session_uuid, sequence, benefit, message) VALUES (\'{0}\', \'{1}\', \'{2}\', (SELECT MAX(sequence)+1 FROM conversations WHERE session_uuid = \'{2}\'), \'{3}\', \'{4}\')'.format(id, ts, session_uuid, benefit, message))
             except:
-                sql = SQL('INSERT INTO conversations (id, session_uuid, sequence, benefit, message) VALUES (\'{0}\', \'{1}\', 0, \'{2}\', \'{3}\')'.format(id, session_uuid, benefit, message))
+                sql = SQL('INSERT INTO conversations (id, timestamp, session_uuid, sequence, benefit, message) VALUES (\'{0}\', \'{1}\', \'{2}\', 0, \'{3}\', \'{4}\')'.format(id, ts, session_uuid, benefit, message))
 
             cur.execute(sql)
             self.conn.commit()

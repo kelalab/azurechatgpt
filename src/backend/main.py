@@ -51,7 +51,7 @@ async def post_messages(benefit: str, data: MessageList, session_uuid = None):
 
     repo = Repository()
     # Save user input to db
-    repo.insert_conv(session_uuid, benefit, combined)
+    repo.insert_conv(session_uuid, benefit, data.data[-1].content)
 
     response = OpenAi().process_input_with_retrieval(benefit, combined)
     #response = OpenAi().get_completion_from_messages(dict_data)
