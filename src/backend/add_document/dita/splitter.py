@@ -64,9 +64,13 @@ class Splitter:
 
     def get_topic(self, node: ET.Element, section, subsection=-1, optionalsubsection=-1):
         depth = node.attrib['otherprops']
-        if section == '1.1':
+        debug = False
+        print('section: ', section)
+        if section == '1.1' or section == '1.1.5':
             print('section:', section, subsection, optionalsubsection, depth)
-
+            debug = True
+        else:
+            debug = False
         x = 1
         y = 1
         text = ''
@@ -85,7 +89,7 @@ class Splitter:
             if child.tag == 'body':
                 for elem in child:
                     if elem.tag == 'p':
-                        txt = self.get_text(elem)
+                        txt = self.get_text(elem, debug)
                         text += '\n' + txt
                     if elem.tag == 'ul':
                         txt = self.get_list(elem)
@@ -96,7 +100,6 @@ class Splitter:
                     if elem.tag == 'example':
                         txt = self.get_text(elem)
                         text += '\n>ESIMERKKI: ' + txt + '\n'
-
             if child.tag == 'topic':
                 topic = self.get_topic(child, section, x, y)
                 if topic.split(' ')[1][-1].isalpha():
@@ -124,7 +127,7 @@ class Splitter:
                         self.get_list(nested)
         return text
 
-    def get_text(self, node: ET.Element):
+    def get_text(self, node: ET.Element, debug=False):
         '''Gets text out of an XML Node'''
 
         # Get initial text
@@ -132,10 +135,43 @@ class Splitter:
         text = ' '.join(text.split())
         # Get all text from child nodes recursively
         for child_node in node:
+            
+
             if len(text) > 0:
-                text += ' ' + self.get_text(child_node)
+                if child_node.tag == 'xref':
+                  href = child_node.get('href')
+                  if debug: print('href:', href)
+                  if href.startswith('http'):
+                    link_text = self.get_text(child_node)
+                    link_elem = f'<a href="{href}" target="_blank">{link_text}</a>'
+                    if debug: print('LINKKI: ')
+                    #print(text)
+                    #print('link text: ', link_text)
+                    if debug: print('element:', link_elem)
+                    if debug: print('END LINKKI')
+                    text += ' ' + link_elem
+                  else:
+                    text += ' ' + self.get_text(child_node)
+                else:
+                    text += ' ' + self.get_text(child_node)
             else:
-                text += self.get_text(child_node)
+                if child_node.tag == 'xref':
+                    href = child_node.get('href')
+                    if debug: print('href:', href)
+                    if href.startswith('http'):
+                        link_text = self.get_text(child_node)
+                        link_elem = f'<a href="{href}" target="_blank">{link_text}</a>'
+                        if debug: print('LINKKI: ')
+                        #print(text)
+                        #print('link text: ', link_text)
+                        if debug: print('element:', link_elem)
+                        if debug: print('END LINKKI')
+                        text += link_elem
+                    else:
+                       text += self.get_text(child_node) 
+                else:
+                    text += self.get_text(child_node)
         # Get text that occurs after child nodes
         text += ' ' + ' '.join(node.tail.split()) if node.tail else ''
+        if debug: print('text: ', text)
         return text

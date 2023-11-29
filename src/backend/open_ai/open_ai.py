@@ -86,7 +86,7 @@ class OpenAi:
             system_message = f'''ARVIOI MITKÄ LÄHTEET vastaavat parhaiten käyttäjän esittämään kysymykseen. 
                                 Palauta vähintään kaksi lähdettä. 
                                 Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
-                                Vastauksesi saa sisältää VAIN listauksen LÄHTEIDEN NUMEROISTA.
+                                Vastauksesi sisältää VAIN listauksen LÄHTEIDEN NUMEROISTA.
                                 [LÄHTEET]{content}[/LÄHTEET]'''
                                 # Vastaa muodossa: LÄHDEx, LÄHDEy, LÄHDEz.
 
@@ -156,7 +156,7 @@ class OpenAi:
         openai_response = self.get_completion_from_messages(messages).response        
         
         for substr in UNABLE_TO_ASWER:
-            if openai_response.message.lower().find(substr) > -1:
+            if re.search(f'(^{substr})|(\s{substr})', openai_response.message.lower()):
                 print('Could not answer')
                 final_response = Response(openai_response.message, openai_response.cost, openai_response.role, list(), messages)
                 return final_response
