@@ -1,8 +1,10 @@
 from fastapi import FastAPI, UploadFile
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import uuid
 import uvicorn
 import os
+from starlette.background import BackgroundTasks
 
 from open_ai.open_ai import OpenAi
 from add_document.add_document import AddDocument
@@ -18,6 +20,9 @@ def reuse_or_generate_uuid(session_uuid):
         return session_uuid
     else:
         return uuid.uuid4()
+
+def remove_file(path: str) -> None:
+    os.unlink(path)
 
 @app.post('/message')
 def post_message(benefit:str, message: str, session_uuid = None):
@@ -78,9 +83,15 @@ def add_document(benefit: str, file: UploadFile, max_depth = 0):
 def get_source(id: str):
     return Repository().get_source(id)
 
-@app.post("/dummypath")
+@app.post('/dummypath')
 def get_body(data: GraphList):
     return data
+
+@app.get('/logs')
+def get_logs(background_tasks: BackgroundTasks, thumb = None):
+    path = Repository().get_logs(thumb)
+    background_tasks.add_task(remove_file, path)
+    return FileResponse(path)
 
 app.mount("/", StaticFiles(directory="static", html="true"), name="static")
 

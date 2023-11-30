@@ -8,6 +8,7 @@ import os
 import json
 import uuid
 import datetime
+import tempfile
 
 from model.constants import DB_HOST
 from model.document import Document
@@ -121,6 +122,29 @@ class Repository:
        cur.close()
        return ret
     
+    def get_logs(self, thumb):
+        cur = self.conn.cursor()
+        if thumb:
+            cur.execute('SELECT sequence, timestamp, benefit, thumb, message  FROM conversations WHERE thumb = {0} ORDER BY session_uuid, sequence'.format(thumb))
+        else:
+            cur.execute('SELECT sequence, timestamp, benefit, thumb, message FROM conversations ORDER BY session_uuid, sequence')
+
+        f, path = tempfile.mkstemp(suffix='.csv')
+        with os.fdopen(f, 'w') as tf:
+            tf.write('Sequence, Timestamp, Benefit, Thumb, Message\n')
+            while True:
+                rows = cur.fetchmany(1000)
+                
+                if not rows:
+                    break
+
+                for row in rows:
+                    for col in row:
+                        tf.write(str(col) + ',')
+
+        cur.close()
+        return path
+
     # Helper function: Get most similar documents from the database
     def get_top3_similar_docs(self, benefit, query_embedding):
         ''' Finds the three closest documents from the database based on K Nearest Neighbor vector comparison algorithm
