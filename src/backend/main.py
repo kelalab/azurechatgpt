@@ -76,7 +76,7 @@ def thumb(message_id: str, thumb: int):
 
 @app.post('/add_document')
 def add_document(benefit: str, file: UploadFile, max_depth = 0):
-    content = file.read()
+    content = file.file.read()
     ad = AddDocument(file.filename, content, int(max_depth))
     return ad.generate_embeddings(benefit)
 
