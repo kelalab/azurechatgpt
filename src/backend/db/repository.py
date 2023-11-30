@@ -24,7 +24,7 @@ register_adapter(np.ndarray, addapt_numpy_array)
 
 class Repository:
     def __init__(self):
-        self.conn = psycopg2.connect(database='embeddings', user='pgvector', password='hassusalakala', host=DB_HOST)
+        self.conn = psycopg2.connect(database='embeddings', user=os.environ['DB_USER'], password=os.environ['DB_PASS'], host=DB_HOST)
 
     def create_table(self, name='embeddings'):
         cur = self.conn.cursor()

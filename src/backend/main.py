@@ -14,6 +14,7 @@ from model.graph import GraphList
 from model.message import MessageList
 
 app = FastAPI()
+log_key = os.environ['LOG_KEY']
 
 def reuse_or_generate_uuid(session_uuid):
     if session_uuid:
@@ -88,10 +89,13 @@ def get_body(data: GraphList):
     return data
 
 @app.get('/logs')
-def get_logs(background_tasks: BackgroundTasks, thumb = None):
-    path = Repository().get_logs(thumb)
-    background_tasks.add_task(remove_file, path)
-    return FileResponse(path)
+def get_logs(background_tasks: BackgroundTasks, key = None, thumb = None):
+    if log_key == key:
+        path = Repository().get_logs(thumb)
+        background_tasks.add_task(remove_file, path)
+        return FileResponse(path)
+    else:
+        return {'status': 'error', 'desc': 'Cannot do that'}
 
 app.mount("/", StaticFiles(directory="static", html="true"), name="static")
 

@@ -24,8 +24,8 @@ db_host = os.environ['DB_HOST'] or 'localhost'
 
 conn = psycopg2.connect(
     database='embeddings',
-    user='pgvector',
-    password='hassusalakala',
+    user=os.environ['DB_USER'],
+    password=os.environ['DB_PASS'],
     host=db_host
 )
 
