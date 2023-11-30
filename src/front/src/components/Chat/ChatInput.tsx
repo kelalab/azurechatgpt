@@ -73,6 +73,7 @@ const ChatInput = (props: any) => {
         addMessage(_msg);
       }
       const resp_msg: Message = {
+        uuid: json.response.uuid,
         content: json.response.message,
         cost: json.response.cost,
         //user: "KelalabGPT",

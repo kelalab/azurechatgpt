@@ -1,4 +1,4 @@
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, useState } from "react";
 import { Message } from "../../types";
 import { AI_NAME } from "../../constants";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
@@ -21,10 +21,19 @@ const Cost = (props: CostProps) => {
 interface MessageBoxProps extends PropsWithChildren {
   right?: Boolean;
   skeleton?: Boolean;
+  message?: Message;
 }
 
 const MessageBox = (props: MessageBoxProps) => {
-  const { children, right, user, cost, skeleton } = props;
+  const { children, right, user, cost, skeleton, message } = props;
+  const [evaluation, setEvaluation] = useState(-1);
+  const sendEvaluation = async (messageId: string, score: number) => {
+    const response = await fetch(
+      `/thumb?message_id=${messageId}&thumb=${score}`
+    );
+    setEvaluation(score);
+  };
+
   if (right)
     return (
       <div className="border-2 rounded-b-xl rounded-tl-xl self-end w-4/5 p-4 text-white bg-slate-800">
@@ -39,13 +48,33 @@ const MessageBox = (props: MessageBoxProps) => {
           {user}
           <div className="inline-flex gap-4 ml-24">
             <span className="text-white text-sm">Arvioi vastaus: </span>
-            <button>
+            <button
+              onClick={() => sendEvaluation(message?.uuid, 0)}
+              className={
+                evaluation == 0 &&
+                "outline outline-offset-2 rounded-sm outline-2"
+              }
+            >
               <FaThumbsDown color="red" />
             </button>
-            <button className="-rotate-90">
-              <FaThumbsUp color="yellow" />
+            <button
+              onClick={() => sendEvaluation(message?.uuid, 2)}
+              className={
+                evaluation == 2 &&
+                "outline outline-offset-2 rounded-sm outline-2"
+              }
+            >
+              <div className="-rotate-90">
+                <FaThumbsUp color="yellow" />
+              </div>
             </button>
-            <button>
+            <button
+              onClick={() => sendEvaluation(message?.uuid, 4)}
+              className={
+                evaluation == 4 &&
+                "outline outline-offset-2 rounded-sm outline-2"
+              }
+            >
               <FaThumbsUp color="green" />
             </button>
           </div>
@@ -90,7 +119,7 @@ const ChatHistory = (props: any) => {
         if (message.visible) {
           if (message.role === "assistant") {
             return (
-              <MessageBox key={"msg-" + idx} user={AI_NAME}>
+              <MessageBox key={"msg-" + idx} user={AI_NAME} message={message}>
                 <div>
                   {message.content.split("\n").map((m, idx) => {
                     return <p key={`p-${idx}`}>{m}</p>;
