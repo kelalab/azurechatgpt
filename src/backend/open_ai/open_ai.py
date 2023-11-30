@@ -100,7 +100,11 @@ class OpenAi:
             optimal_sources = openai_response.split(",")
             optimal_src_indexes = []
             for os in optimal_sources:
-                optimal_src_indexes.append(int(re.sub('LÄHDE','',os)))
+                try:
+                    optimal_src_indexes.append(int(re.sub('LÄHDE','',os)))
+                except:
+                    # if 'LÄHDE' not found
+                    pass
 
             print('optimal_src_indexes:', optimal_src_indexes)
 
