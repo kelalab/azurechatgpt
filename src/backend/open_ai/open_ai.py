@@ -7,6 +7,7 @@ import json
 from model.constants import AZURE_OPENAI_API_DEPLOYMENT_NAME, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_VERSION, AZURE_OPENAI_API_KEY
 from model.response import Response
 from db.repository import Repository
+from util.util import Util
 
 UNABLE_TO_ASWER = ['en pysty', 'en voi', 'pahoittelut']
 
@@ -69,13 +70,14 @@ class OpenAi:
         delimiter = '```'
         sources = []
 
+        embedding_cost = self.get_embedding_cost(Util().num_tokens_from_string(user_input))
         #Step 1: Get documents related to the user input from database
         related_docs = Repository().get_top3_similar_docs(benefit, self.get_embedding(user_input)['data'][0]['embedding'])
         for rl in related_docs:
             print(rl[3])
 
         related_docs = list(filter(lambda x: x[3]<self.distance_limit,related_docs))
-
+        source_cost = 0
         content = ''
         i=0
         if len(related_docs) >= 2:
@@ -94,13 +96,21 @@ class OpenAi:
                 {'role': 'system', 'content': system_message},
                 {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
             ]
-            openai_response = self.get_completion_from_messages(messages).response.message
-            print('source response:', openai_response)
+            source_response = self.get_completion_from_messages(messages)
+            source_cost = source_response.response.cost
+            print('source cost:', source_cost)
+
+            openai_response = source_response.response.message
+            print('source response message:', openai_response)
 
             optimal_sources = openai_response.split(",")
             optimal_src_indexes = []
             for os in optimal_sources:
-                optimal_src_indexes.append(int(re.sub('LÄHDE','',os)))
+                try:
+                    optimal_src_indexes.append(int(re.sub('LÄHDE','',os)))
+                except:
+                    # if 'LÄHDE' not found
+                    pass
 
             print('optimal_src_indexes:', optimal_src_indexes)
 
@@ -158,10 +168,10 @@ class OpenAi:
         for substr in UNABLE_TO_ASWER:
             if re.search(f'(^{substr})|(\s{substr})', openai_response.message.lower()):
                 print('Could not answer')
-                final_response = Response(openai_response.message, openai_response.cost, openai_response.role, list(), messages)
+                final_response = Response(openai_response.message, embedding_cost + source_cost + openai_response.cost, openai_response.role, list(), messages)
                 return final_response
          
-        final_response = Response(openai_response.message, openai_response.cost, openai_response.role, sources, messages)
+        final_response = Response(openai_response.message, embedding_cost + source_cost + openai_response.cost, openai_response.role, sources, messages)
         return final_response
     
     def combine_history(self, messages):

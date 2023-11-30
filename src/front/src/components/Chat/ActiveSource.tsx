@@ -16,7 +16,8 @@ const ActiveSource = (props) => {
       </div>
       <div className="p-2 px-4">
         {activeSource.split("\n").map((paragraph) => {
-          return <p>{paragraph}</p>;
+          return <p dangerouslySetInnerHTML={{ __html: paragraph }} />;
+          //return <p safe={true}>{paragraph}</p>;
         })}
       </div>
     </div>

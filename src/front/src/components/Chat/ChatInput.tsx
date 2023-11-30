@@ -24,6 +24,8 @@ const ChatInput = (props: any) => {
     messages,
     loading,
     setLoading,
+    thread,
+    setThread,
   } = props;
   const [input, setInput] = useState("");
   const [benefit, setBenefit] = useState("Toimeentulotuki");
@@ -41,7 +43,11 @@ const ChatInput = (props: any) => {
     // if we are waiting for response we shouldn't be able to send another message
     if (loading) return;
     if (messages.length === 0) {
-      const my_msg: Message = { content: message, role: "user", visible: true };
+      const my_msg: Message = {
+        content: message,
+        role: "user",
+        visible: true,
+      };
       addMessage(my_msg);
       setLoading(true);
       const response = await fetch(
@@ -71,6 +77,7 @@ const ChatInput = (props: any) => {
         addMessage(_msg);
       }
       const resp_msg: Message = {
+        uuid: json.response.uuid,
         content: json.response.message,
         cost: json.response.cost,
         //user: "KelalabGPT",
@@ -80,28 +87,40 @@ const ChatInput = (props: any) => {
       };
       addMessage(resp_msg);
       setInput("");
+      setThread(json.session_uuid);
       setLoading(false);
     } else {
-      const my_msg: Message = { content: message, role: "user", visible: true };
+      const my_msg: Message = {
+        content: message,
+        role: "user",
+        visible: true,
+      };
       addMessage(my_msg);
       const messages_to_send = messages.map((m: Message) => {
         return {
+          uuid: m.uuid,
           content: m.content,
           role: m.role,
           cost: m.cost,
           sources: m.sources,
         };
       });
-      messages_to_send.push({ content: my_msg.content, role: my_msg.role });
-      console.log("messages_to_send", messages_to_send);
-      const response = await fetch(`/messages?benefit=${benefit}`, {
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-        body: JSON.stringify({ data: messages_to_send }),
+      messages_to_send.push({
+        content: my_msg.content,
+        role: my_msg.role,
       });
+      console.log("messages_to_send", messages_to_send);
+      const response = await fetch(
+        `/messages?benefit=${benefit}&session_uuid=${thread}`,
+        {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+          body: JSON.stringify({ data: messages_to_send }),
+        }
+      );
       const json = await response.json();
       const json_msgs: Message[] = json.messages;
       // clear our message list
@@ -110,6 +129,7 @@ const ChatInput = (props: any) => {
       }
       const r_list = func(json_msgs);
       const resp_msg: Message = {
+        uuid: json.response.uuid,
         content: json.response.message,
         cost: json.response.cost,
         role: json.response.role,

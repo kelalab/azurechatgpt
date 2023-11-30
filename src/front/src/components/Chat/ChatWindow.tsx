@@ -5,7 +5,14 @@ import { Message } from "../../types";
 
 const ChatWindow = (props: any) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const { activeSource, setActiveSource, loading, setLoading } = props;
+  const {
+    activeSource,
+    setActiveSource,
+    loading,
+    setLoading,
+    setThread,
+    thread,
+  } = props;
   const addMessage = (message: Message) => {
     setMessages((prev_state) => {
       return [...prev_state, message];
@@ -26,6 +33,7 @@ const ChatWindow = (props: any) => {
         messages={messages}
         setActiveSource={setActiveSource}
         loading={loading}
+        setThread={setThread}
       />
       <ChatInput
         addMessage={addMessage}
@@ -34,6 +42,8 @@ const ChatWindow = (props: any) => {
         messages={messages}
         loading={loading}
         setLoading={setLoading}
+        thread={thread}
+        setThread={setThread}
       />
     </div>
   );

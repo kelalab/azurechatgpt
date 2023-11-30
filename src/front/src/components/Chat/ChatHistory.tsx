@@ -1,7 +1,8 @@
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, useState } from "react";
 import { Message } from "../../types";
 import { AI_NAME } from "../../constants";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
+import { FaThumbsUp, FaThumbsDown } from "react-icons/fa6";
 import "react-loading-skeleton/dist/skeleton.css";
 
 interface CostProps extends PropsWithChildren {
@@ -20,10 +21,19 @@ const Cost = (props: CostProps) => {
 interface MessageBoxProps extends PropsWithChildren {
   right?: Boolean;
   skeleton?: Boolean;
+  message?: Message;
 }
 
 const MessageBox = (props: MessageBoxProps) => {
-  const { children, right, user, cost, skeleton } = props;
+  const { children, right, user, cost, skeleton, message } = props;
+  const [evaluation, setEvaluation] = useState(-1);
+  const sendEvaluation = async (messageId: string, score: number) => {
+    const response = await fetch(
+      `/thumb?message_id=${messageId}&thumb=${score}`
+    );
+    setEvaluation(score);
+  };
+
   if (right)
     return (
       <div className="border-2 rounded-b-xl rounded-tl-xl self-end w-4/5 p-4 text-white bg-slate-800">
@@ -34,7 +44,41 @@ const MessageBox = (props: MessageBoxProps) => {
   return (
     <SkeletonTheme baseColor="#202020" highlightColor="#444">
       <div className="border-2 rounded-b-xl rounded-tr-xl w-4/5 p-4 text-white">
-        <div className="font-bold text-sky-600 p-2">{user}</div>
+        <div className="font-bold text-sky-600 p-2">
+          {user}
+          <div className="inline-flex gap-4 ml-24">
+            <span className="text-white text-sm">Arvioi vastaus: </span>
+            <button
+              onClick={() => sendEvaluation(message?.uuid, 0)}
+              className={
+                evaluation == 0 &&
+                "outline outline-offset-2 rounded-sm outline-2"
+              }
+            >
+              <FaThumbsDown color="red" />
+            </button>
+            <button
+              onClick={() => sendEvaluation(message?.uuid, 2)}
+              className={
+                evaluation == 2 &&
+                "outline outline-offset-2 rounded-sm outline-2"
+              }
+            >
+              <div className="-rotate-90">
+                <FaThumbsUp color="yellow" />
+              </div>
+            </button>
+            <button
+              onClick={() => sendEvaluation(message?.uuid, 4)}
+              className={
+                evaluation == 4 &&
+                "outline outline-offset-2 rounded-sm outline-2"
+              }
+            >
+              <FaThumbsUp color="green" />
+            </button>
+          </div>
+        </div>
         <div className="p-2">
           {skeleton ? (
             <>
@@ -56,7 +100,7 @@ const MessageBox = (props: MessageBoxProps) => {
 };
 
 const ChatHistory = (props: any) => {
-  const { messages, setActiveSource, loading } = props;
+  const { messages, setActiveSource, loading, setThread } = props;
   console.log("messages: ", messages);
 
   const fetchSource = async (id: String) => {
@@ -75,10 +119,10 @@ const ChatHistory = (props: any) => {
         if (message.visible) {
           if (message.role === "assistant") {
             return (
-              <MessageBox key={"msg-" + idx} user={AI_NAME}>
+              <MessageBox key={"msg-" + idx} user={AI_NAME} message={message}>
                 <div>
-                  {message.content.split("\n").map((m) => {
-                    return <p>{m}</p>;
+                  {message.content.split("\n").map((m, idx) => {
+                    return <p key={`p-${idx}`}>{m}</p>;
                   })}
                 </div>
                 <div className="text-amber-500 text-sm ">
@@ -94,7 +138,8 @@ const ChatHistory = (props: any) => {
                           onClick={() => fetchSource(id)}
                           href={"#"}
                         >
-                          {json["Header 2"]}
+                          {json["Header 1"]}
+                          {json["Header 2"] && "/" + json["Header 2"]}
                           {json["Header 3"] && "/" + json["Header 3"]}
                           {json["Header 4"] && "/" + json["Header 4"]}
                           {json["Header 5"] && "/" + json["Header 5"]}

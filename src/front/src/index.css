@@ -28,3 +28,7 @@
 .chat-window {
   max-height: calc(100vh - 106px);
 }
+
+a {
+  color: theme("colors.sky.500");
+}
