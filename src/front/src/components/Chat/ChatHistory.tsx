@@ -138,6 +138,7 @@ const ChatHistory = (props: any) => {
                           onClick={() => fetchSource(id)}
                           href={"#"}
                         >
+                          {json["source"]}
                           {json["Header 1"]}
                           {json["Header 2"] && "/" + json["Header 2"]}
                           {json["Header 3"] && "/" + json["Header 3"]}
