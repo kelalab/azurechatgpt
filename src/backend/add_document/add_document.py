@@ -116,7 +116,7 @@ class AddDocument:
         return {'status': 'success', 'mime': 'dita', 'rows_inserted': len(texts)}
     
     def handle_csv(self, benefit, filename):
-        texts = CsvParser().parse(self.content)
+        texts = CsvParser().parse(self.content, self.max_depth)
         for text in texts:
             metadata = {"source":filename}
             page_content = text
