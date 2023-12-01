@@ -118,7 +118,7 @@ class AddDocument:
     def handle_csv(self, benefit, filename):
         texts = CsvParser().parse(self.content)
         for text in texts:
-            metadata = "source="+filename
+            metadata = {"source":filename}
             page_content = text
             em = self.embed.embed(page_content)
             vector = em.data[0].embedding
