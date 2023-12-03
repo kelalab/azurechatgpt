@@ -4,6 +4,7 @@ import traceback
 
 from add_document.dita.splitter import Splitter
 from add_document.docx.parser import DocxParser
+from add_document.csv.parser import CsvParser
 from add_document.embeddings import Embeddings
 from db.repository import Repository
 from model.document import Document
@@ -56,13 +57,15 @@ class AddDocument:
             if self.file_name.endswith('.dita'):
                 # dita
                 return self.handle_dita(benefit)
+            elif self.file_name.endswith('.csv'):
+                print('csv')
+                return self.handle_csv(benefit, self.file_name)
             else:
                 kind = filetype.guess(self.content)
                 if kind:
                     if 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' == kind.mime:
                         # docx
                         return self.handle_docx(benefit, kind.mime)
-                
                 return {'status': 'error', 'mime': 'unknown'}
 
         except Exception as e:
@@ -111,3 +114,13 @@ class AddDocument:
             self.repo.insert(Document(metadata, page_content, vector, benefit))
             
         return {'status': 'success', 'mime': 'dita', 'rows_inserted': len(texts)}
+    
+    def handle_csv(self, benefit, filename):
+        texts = CsvParser().parse(self.content, self.max_depth)
+        for text in texts:
+            metadata = {"source":filename}
+            page_content = text
+            em = self.embed.embed(page_content)
+            vector = em.data[0].embedding
+            self.repo.insert(Document(metadata, page_content, vector, benefit))
+        return {'status': 'success', 'mime': 'csv', 'rows_inserted': len(texts)}
