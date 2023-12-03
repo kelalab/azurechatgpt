@@ -9,6 +9,7 @@ import json
 import uuid
 import datetime
 import tempfile
+import csv
 
 from model.constants import DB_HOST
 from model.document import Document
@@ -125,13 +126,16 @@ class Repository:
     def get_logs(self, thumb):
         cur = self.conn.cursor()
         if thumb:
-            cur.execute('SELECT sequence, timestamp, benefit, thumb, message  FROM conversations WHERE thumb = {0} ORDER BY session_uuid, sequence'.format(thumb))
+            cur.execute('SELECT sequence, timestamp, thumb, message  FROM conversations WHERE thumb = {0} ORDER BY session_uuid, sequence'.format(thumb))
         else:
-            cur.execute('SELECT sequence, timestamp, benefit, thumb, message FROM conversations ORDER BY session_uuid, sequence')
+            cur.execute('SELECT sequence, timestamp, thumb, message FROM conversations ORDER BY session_uuid, sequence')
 
         f, path = tempfile.mkstemp(suffix='.csv')
+
         with os.fdopen(f, 'w') as tf:
-            tf.write('Sequence, Timestamp, Benefit, Thumb, Message\n')
+            writer = csv.writer(tf, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+            tf.write('Sequence, Timestamp, Thumb, Message\n')
             while True:
                 rows = cur.fetchmany(1000)
                 
@@ -139,8 +143,7 @@ class Repository:
                     break
 
                 for row in rows:
-                    for col in row:
-                        tf.write(str(col) + ',')
+                    writer.writerow(row)
 
         cur.close()
         return path
