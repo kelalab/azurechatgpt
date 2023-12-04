@@ -123,12 +123,29 @@ class Repository:
        cur.close()
        return ret
     
-    def get_logs(self, thumb):
+    def get_logs(self, thumb, date):
         cur = self.conn.cursor()
+
+        if date:
+            dateStart = date
+            dateEnd = date + datetime.timedelta(days=1)
+
+        sql = 'SELECT sequence, timestamp, thumb, message FROM conversations WHERE 1 = 1 '
+        params = []
+
         if thumb:
-            cur.execute('SELECT sequence, timestamp, thumb, message  FROM conversations WHERE thumb = {0} ORDER BY session_uuid, sequence'.format(thumb))
-        else:
-            cur.execute('SELECT sequence, timestamp, thumb, message FROM conversations ORDER BY session_uuid, sequence')
+            sql = sql + 'and thumb = {} '
+            params.append(thumb)
+
+        if date:
+            sql = sql + 'and timestamp BETWEEN \'{}\' and \'{}\' '
+            params.append(dateStart.date())
+            params.append(dateEnd.date())
+
+        sql = sql + 'ORDER BY session_uuid, sequence'
+        sql = sql.format(*params)
+
+        cur.execute(sql)
 
         f, path = tempfile.mkstemp(suffix='.csv')
 

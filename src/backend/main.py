@@ -5,6 +5,7 @@ import uuid
 import uvicorn
 import os
 from starlette.background import BackgroundTasks
+import datetime
 
 from open_ai.open_ai import OpenAi
 from add_document.add_document import AddDocument
@@ -15,6 +16,7 @@ from model.message import MessageList
 
 app = FastAPI()
 log_key = os.environ['LOG_KEY']
+date_format = '%Y-%m-%d'
 
 def reuse_or_generate_uuid(session_uuid):
     if session_uuid:
@@ -89,9 +91,10 @@ def get_body(data: GraphList):
     return data
 
 @app.get('/logs')
-def get_logs(background_tasks: BackgroundTasks, key = None, thumb = None):
+def get_logs(background_tasks: BackgroundTasks, key = None, date = None, thumb = None):
     if log_key == key:
-        path = Repository().get_logs(thumb)
+        udate = datetime.datetime.strptime(date, date_format)
+        path = Repository().get_logs(thumb, udate)
         background_tasks.add_task(remove_file, path)
         return FileResponse(path)
     else:
