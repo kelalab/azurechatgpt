@@ -1,5 +1,5 @@
 import psycopg2
-from psycopg2.extras import execute_values
+from psycopg2.extras import execute_values, register_uuid
 from psycopg2.extensions import register_adapter, AsIs
 from pgvector.psycopg2 import register_vector
 from psycopg2.sql import SQL
@@ -22,6 +22,7 @@ def addapt_numpy_array(numpy_array):
 
 register_adapter(dict, adapt_dict)
 register_adapter(np.ndarray, addapt_numpy_array)
+register_uuid()
 
 class Repository:
     def __init__(self):
@@ -55,9 +56,22 @@ class Repository:
             sequence integer NOT NULL DEFAULT 0,
             benefit text,
             message text,
-            thumb integer
+            thumb integer,
+            sources text,
+            cost decimal
             );
             '''
+        cur.execute(table_create_command)
+        self.conn.commit()
+        cur.close()
+
+    def alter_conversations_table(self):
+        cur = self.conn.cursor()
+        table_create_command = f'''
+        ALTER TABLE conversations
+        ADD COLUMN sources text,
+        ADD COLUMN cost decimal;
+        '''
         cur.execute(table_create_command)
         self.conn.commit()
         cur.close()
@@ -73,23 +87,28 @@ class Repository:
             self.create_table(table)
             self.insert(document, table)
 
-    def insert_conv(self, session_uuid: str, benefit: str, message: str):
+    def insert_conv_question(self, session_uuid: str, benefit: str, message: str):
         try:
             cur = self.conn.cursor()
-
             sql = SQL('SELECT MAX(sequence)+1 FROM conversations WHERE session_uuid = \'{0}\''.format(session_uuid))
             cur.execute(sql)
             result = cur.fetchall()
 
-            id = str(uuid.uuid4())
-            ts = datetime.datetime.now()
+            seq = 0
             try:
-                int(result[0][0])
-                sql = SQL('INSERT INTO conversations (id, timestamp, session_uuid, sequence, benefit, message) VALUES (\'{0}\', \'{1}\', \'{2}\', (SELECT MAX(sequence)+1 FROM conversations WHERE session_uuid = \'{2}\'), \'{3}\', \'{4}\')'.format(id, ts, session_uuid, benefit, message))
+                seq = int(result[0][0])
             except:
-                sql = SQL('INSERT INTO conversations (id, timestamp, session_uuid, sequence, benefit, message) VALUES (\'{0}\', \'{1}\', \'{2}\', 0, \'{3}\', \'{4}\')'.format(id, ts, session_uuid, benefit, message))
+                pass
 
-            cur.execute(sql)
+            id = uuid.uuid4()
+            args = {'id': id, 'timestamp': datetime.datetime.now(), 'session_uuid': session_uuid, 'sequence': seq, 'benefit': benefit, 'message': message}
+            sql = '''
+                INSERT INTO conversations (id, timestamp, session_uuid, sequence, benefit, message)
+                VALUES (%(id)s, %(timestamp)s, %(session_uuid)s, %(sequence)s, %(benefit)s, %(message)s)
+            '''
+
+            cur.execute(sql, args)
+
             self.conn.commit()
             cur.close()
 
@@ -97,7 +116,58 @@ class Repository:
         except psycopg2.errors.UndefinedTable:
             self.conn.rollback()
             self.create_conversations_table()
-            return self.insert_conv(session_uuid, benefit, message)
+            return self.insert_conv_question(session_uuid, benefit, message)
+        except psycopg2.errors.UndefinedColumn:
+            self.conn.rollback()
+            self.alter_conversations_table()
+            return self.insert_conv_question(session_uuid, benefit, message)
+
+    def insert_conv_answer(self, session_uuid: str, benefit: str, message: str, sources: [], cost: float):
+        try:
+            cur = self.conn.cursor()
+
+            sql = SQL('SELECT MAX(sequence)+1 FROM conversations WHERE session_uuid = \'{0}\''.format(session_uuid))
+            cur.execute(sql)
+            result = cur.fetchall()
+
+            seq = 0
+            try:
+                seq = int(result[0][0])
+            except:
+                pass
+
+            parsed_sources = []
+            for source in sources:
+                source_items = []
+                jsn = json.loads(source)
+                for key in jsn.keys():
+                    if 'id' == key:
+                        continue
+                    source_items.append( jsn[key] )
+                
+                parsed_sources.append('/'.join(source_items))
+
+            id = uuid.uuid4()
+            args = {'id': id, 'timestamp': datetime.datetime.now(), 'session_uuid': session_uuid, 'sequence': seq, 'benefit': benefit, 'message': message, 'sources': ', '.join(parsed_sources), 'cost': cost}
+
+            sql = '''
+                INSERT INTO conversations (id, timestamp, session_uuid, sequence, benefit, message, sources, cost)
+                VALUES (%(id)s, %(timestamp)s, %(session_uuid)s, %(sequence)s, %(benefit)s, %(message)s, %(sources)s, %(cost)s)
+            '''
+
+            cur.execute(sql, args)
+            self.conn.commit()
+            cur.close()
+
+            return id
+        except psycopg2.errors.UndefinedTable:
+            self.conn.rollback()
+            self.create_conversations_table()
+            return self.insert_conv_answer(session_uuid, benefit, message, sources, cost)
+        except psycopg2.errors.UndefinedColumn:
+            self.conn.rollback()
+            self.alter_conversations_table()
+            return self.insert_conv_answer(session_uuid, benefit, message, sources, cost)
 
     def update_thumb(self, message_uuid, thumb):
         try:
@@ -130,7 +200,7 @@ class Repository:
             dateStart = date
             dateEnd = date + datetime.timedelta(days=1)
 
-        sql = 'SELECT sequence, timestamp, thumb, message FROM conversations WHERE 1 = 1 '
+        sql = 'SELECT sequence, timestamp, thumb, sources, cost, message FROM conversations WHERE 1 = 1 '
         params = []
 
         if thumb:
@@ -152,7 +222,7 @@ class Repository:
         with os.fdopen(f, 'w') as tf:
             writer = csv.writer(tf, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
-            tf.write('Sequence, Timestamp, Thumb, Message\n')
+            tf.write('Sequence, Timestamp, Thumb, Sources, Cost, Message\n')
             while True:
                 rows = cur.fetchmany(1000)
                 

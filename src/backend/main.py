@@ -34,14 +34,14 @@ def post_message(benefit:str, message: str, session_uuid = None):
 
     repo = Repository()
     # Save user input to db
-    repo.insert_conv(session_uuid, benefit, message)
+    repo.insert_conv_question(session_uuid, benefit, message)
 
     response = OpenAi().process_input_with_retrieval(benefit, message)
 
     # Save gpt output to db
-    response.response.uuid = repo.insert_conv(session_uuid, benefit, response.response.message)
+    response.response.uuid = repo.insert_conv_answer(session_uuid, benefit, response.response.message, response.response.sources, response.response.cost)
 
-    return {'session_uuid': session_uuid, 'response': response.response, 'messages':response.messages}
+    return {'session_uuid': session_uuid, 'response': response.response, 'messages': response.messages}
 
 @app.post('/messages')
 def post_messages(benefit: str, data: MessageList, session_uuid = None):
@@ -59,15 +59,15 @@ def post_messages(benefit: str, data: MessageList, session_uuid = None):
 
     repo = Repository()
     # Save user input to db
-    repo.insert_conv(session_uuid, benefit, data.data[-1].content)
+    repo.insert_conv_question(session_uuid, benefit, data.data[-1].content)
 
     response = OpenAi().process_input_with_retrieval(benefit, combined)
     #response = OpenAi().get_completion_from_messages(dict_data)
 
     # Save gpt output to db
-    response.response.uuid = repo.insert_conv(session_uuid, benefit, response.response.message)
+    response.response.uuid = repo.insert_conv_answer(session_uuid, benefit, response.response.message, response.response.sources, response.response.cost)
 
-    return {'session_uuid': session_uuid, 'response': response.response, 'messages':data.data}
+    return {'session_uuid': session_uuid, 'response': response.response, 'messages': data.data}
 
 @app.get('/thumb')
 def thumb(message_id: str, thumb: int):
@@ -93,7 +93,9 @@ def get_body(data: GraphList):
 @app.get('/logs')
 def get_logs(background_tasks: BackgroundTasks, key = None, date = None, thumb = None):
     if log_key == key:
-        udate = datetime.datetime.strptime(date, date_format)
+        udate = None
+        if date:
+            udate = datetime.datetime.strptime(date, date_format)
         path = Repository().get_logs(thumb, udate)
         background_tasks.add_task(remove_file, path)
         return FileResponse(path)
