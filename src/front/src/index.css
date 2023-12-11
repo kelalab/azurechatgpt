@@ -2,14 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-/* width */
-::-webkit-scrollbar {
-  width: 10px;
+body {
+  background-color: theme("colors.slate.950");
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
   background: theme("colors.slate.900");
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
 }
 
 /* Handle */
@@ -25,10 +29,41 @@
   background: theme("colors.blue.900");
 }
 
-.chat-window {
-  max-height: calc(100vh - 106px);
-}
-
 a {
   color: theme("colors.sky.500");
+}
+
+.amber {
+  color: theme("colors.amber.500");
+}
+
+@media screen and (prefers-color-scheme: light) {
+  body {
+    background-color: rgb(233, 235, 250);
+    color: black;
+  }
+  * {
+    border-color: theme("colors.gray.300");
+  }
+  ::-webkit-scrollbar-track {
+    background: theme("colors.slate.300");
+  }
+  ::-webkit-scrollbar-thumb {
+    background: theme("colors.sky.600");
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: theme("colors.sky.700");
+  }
+
+  a {
+    color: theme("colors.sky.700");
+  }
+
+  .amber {
+    color: theme("colors.amber.600");
+  }
+}
+
+.chat-window {
+  max-height: calc(100vh - 106px);
 }

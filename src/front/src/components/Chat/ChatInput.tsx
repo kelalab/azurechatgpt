@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Message } from "../../types";
+import "./chatinput.css";
 
 const func = (json_msgs: Message[]) => {
   let list = [];
@@ -154,15 +155,15 @@ const ChatInput = (props: any) => {
   };
 
   return (
-    <div className="flex p-2 border-2 rounded-lg mx-8">
+    <div className="input-wrapper flex p-2 border-2 rounded-lg mx-8">
       <input
-        className="flex-1 bg-slate-950 text-white"
+        className="flex-1"
         onChange={(e) => setInput(e.currentTarget.value)}
         onKeyUp={handleKey}
         value={input}
       />
       <button
-        className="border-2 p-2 rounded-lg text-white"
+        className="border-2 p-2 rounded-lg"
         onClick={() => sendMessage(input)}
       >
         Lähetä

@@ -4,6 +4,7 @@ import { AI_NAME } from "../../constants";
 import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa6";
 import "react-loading-skeleton/dist/skeleton.css";
+import "./chathistory.css";
 
 interface CostProps extends PropsWithChildren {
   cost?: Number;
@@ -12,7 +13,7 @@ interface CostProps extends PropsWithChildren {
 const Cost = (props: CostProps) => {
   const { cost } = props;
   return (
-    <div className="font-bold text-amber-500 text-xs py-2">
+    <div className="font-bold amber text-xs py-2">
       Hinta: {cost?.toFixed(3)}€
     </div>
   );
@@ -36,18 +37,18 @@ const MessageBox = (props: MessageBoxProps) => {
 
   if (right)
     return (
-      <div className="border-2 rounded-b-xl rounded-tl-xl self-end w-4/5 p-4 text-white bg-slate-800">
+      <div className="message__wrapper right border-2 rounded-b-xl rounded-tl-xl self-end w-4/5 p-4">
         <div className="font-bold text-sky-600 p-2">{user}</div>
         <div className="p-2">{children}</div>
       </div>
     );
   return (
     <SkeletonTheme baseColor="#202020" highlightColor="#444">
-      <div className="border-2 rounded-b-xl rounded-tr-xl w-4/5 p-4 text-white">
+      <div className="message__wrapper border-2 rounded-b-xl rounded-tr-xl w-4/5 p-4">
         <div className="font-bold text-sky-600 p-2">
           {user}
           <div className="inline-flex gap-4 ml-24">
-            <span className="text-white text-sm">Arvioi vastaus: </span>
+            <span className="text-sm">Arvioi vastaus: </span>
             <button
               onClick={() => sendEvaluation(message?.uuid, 0)}
               className={
@@ -125,7 +126,7 @@ const ChatHistory = (props: any) => {
                     return <p key={`p-${idx}`}>{m}</p>;
                   })}
                 </div>
-                <div className="text-amber-500 text-sm ">
+                <div className="amber text-sm ">
                   <div className="font-bold py-2">Lähteet:</div>
                   {message.sources?.map((source) => {
                     const json = JSON.parse(source);
@@ -133,11 +134,7 @@ const ChatHistory = (props: any) => {
                     console.log("id", id, "json", json);
                     return (
                       <div key={id}>
-                        <a
-                          className="text-sky-500"
-                          onClick={() => fetchSource(id)}
-                          href={"#"}
-                        >
+                        <a onClick={() => fetchSource(id)} href={"#"}>
                           {json["source"]}
                           {json["Header 1"]}
                           {json["Header 2"] && "/" + json["Header 2"]}
@@ -155,7 +152,7 @@ const ChatHistory = (props: any) => {
             );
           } else
             return (
-              <MessageBox key={"msg-" + idx} right user="Me">
+              <MessageBox key={"msg-" + idx} right user="Minä">
                 <div>{message.content.replace(/```/g, "")}</div>
               </MessageBox>
             );

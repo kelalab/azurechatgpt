@@ -1,0 +1,32 @@
+.message__wrapper {
+  color: lightgray;
+}
+
+.message__wrapper.right {
+  color: lightgray;
+  background-color: theme("colors.slate.900");
+}
+
+button {
+  color: lightgray;
+}
+
+@media screen and (prefers-color-scheme: light) {
+  .message__wrapper {
+    color: black;
+    background-color: theme("colors.indigo.100");
+  }
+
+  .message__wrapper button {
+    background-color: transparent;
+  }
+
+  .message__wrapper.right {
+    background-color: theme("colors.indigo.200");
+    color: black;
+  }
+
+  button {
+    color: black;
+  }
+}
