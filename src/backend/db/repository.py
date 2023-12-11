@@ -140,10 +140,11 @@ class Repository:
             for source in sources:
                 source_items = []
                 jsn = json.loads(source)
+                print('jsn', jsn)
                 for key in jsn.keys():
                     if 'id' == key:
                         continue
-                    source_items.append( jsn[key] )
+                    source_items.append( str(jsn[key]) )
                 
                 parsed_sources.append('/'.join(source_items))
 
