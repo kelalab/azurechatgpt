@@ -1,8 +1,10 @@
+import "./activesource.css";
+
 const ActiveSource = (props) => {
   const { activeSource, setActiveSource } = props;
   console.log("active source", activeSource);
   return (
-    <div className="text-white">
+    <div className="source__text">
       <div className="border-b-2 flex flex-col w-full p-2">
         <div className="self-end">
           <h2></h2>

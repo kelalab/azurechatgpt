@@ -236,8 +236,11 @@ class Repository:
         cur.close()
         return path
 
-    # Helper function: Get most similar documents from the database
     def get_top3_similar_docs(self, benefit, query_embedding):
+        return self.vector_search(benefit, query_embedding, 8)
+
+    # Helper function: Get most similar documents from the database
+    def vector_search(self, benefit, query_embedding, limit):
         ''' Finds the three closest documents from the database based on K Nearest Neighbor vector comparison algorithm
         
         Parameters
@@ -257,9 +260,69 @@ class Repository:
         cur = self.conn.cursor()
         # Get the top 3 most similar documents using the KNN <=> operator
         #cur.execute('SELECT pageContent,metadata,vector <=> %s AS distance FROM embeddings ORDER BY vector <=> %s LIMIT 3', (embedding_array,embedding_array,))
-        
-        cur.execute('SELECT id,pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings WHERE benefit = \'' + benefit + '\' ORDER BY vector <=> %s LIMIT 8', (embedding_array,embedding_array,))
+        cur.execute('SELECT id,pageContent,metadata,vector <=> %s AS distance FROM clause_embeddings ORDER BY distance LIMIT %s', (embedding_array,limit,))
+        #cur.execute(f'''SELECT id,pageContent,metadata,vector <=> {embedding_array} AS distance FROM clause_embeddings WHERE benefit = \'' + benefit + '\' ORDER BY distance LIMIT {limit}''')
 
         top3_docs = cur.fetchall()
         cur.close()
         return top3_docs
+    
+    def full_text_search(self, benefit, input, common_words=[], limit=5):
+        '''
+        '''
+        print('common_words', common_words)
+        print('input', input)
+        words = input.split()
+        search_words = []
+        for w in words:
+            a = [y for y in common_words if w.lower().startswith(y)]
+            if len(a) == 0:
+                search_words.append(w)
+        #edited_input = " OR ".join(search_words)
+        edited_input = " ".join(search_words)
+        print('edited_input', edited_input)
+        cur = self.conn.cursor()
+        cur.execute(f'''
+                        SELECT id, pageContent, metadata, searchcontent @@ query AS matches, ts_rank_cd(searchcontent, query) AS rank 
+                        FROM clause_embeddings, websearch_to_tsquery('finnish', '{edited_input}') query, to_tsvector('finnish', pagecontent) searchcontent
+                        WHERE benefit='{benefit}' AND searchcontent @@ query ORDER BY "rank" desc LIMIT {limit}
+                    ''')
+        search_results = cur.fetchall()
+        cur.close()
+        return search_results
+
+    def hybrid_search(self, benefit, input, query_embedding, common_words=[], limit=5):
+        embedding_array = np.array(query_embedding)
+        register_vector(self.conn)
+        cur = self.conn.cursor()
+        sql = """
+            WITH semantic_search AS (
+                SELECT id, pageContent, metadata, vector, RANK () OVER (ORDER BY vector <=> %(embedding)s) AS rank
+                FROM clause_embeddings
+                ORDER BY vector <=> %(embedding)s
+                LIMIT 20
+            ),
+            keyword_search AS (
+                SELECT id, pageContent, metadata, vector, RANK () OVER (ORDER BY ts_rank_cd(to_tsvector('finnish', pageContent), query) DESC)
+                FROM clause_embeddings, plainto_tsquery('finnish', %(query)s) query
+                WHERE to_tsvector('finnish', pageContent) @@ query
+                ORDER BY ts_rank_cd(to_tsvector('finnish', pageContent), query) DESC
+                LIMIT 20
+            )
+            SELECT
+                COALESCE(semantic_search.id, keyword_search.id) AS id,
+                COALESCE(semantic_search.pageContent, keyword_search.pageContent) AS pageContent,
+                COALESCE(semantic_search.metadata, keyword_search.metadata) AS metadata,
+                COALESCE(1.0 / (%(k)s + semantic_search.rank), 0.0) +
+                COALESCE(1.0 / (%(k)s + keyword_search.rank), 0.0) AS score
+            FROM semantic_search
+            FULL OUTER JOIN keyword_search ON semantic_search.id = keyword_search.id
+            ORDER BY score DESC
+            LIMIT 5
+        """
+        k = 60
+        cur.execute(sql, {'query': input, 'embedding': embedding_array, 'k': k})
+        results = cur.fetchall()
+        cur.close()
+        return results
+

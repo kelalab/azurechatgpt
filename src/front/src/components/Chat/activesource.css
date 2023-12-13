@@ -1,0 +1,9 @@
+.source__text {
+  color: lightgray;
+}
+
+@media screen and (prefers-color-scheme: light) {
+  .source__text {
+    color: black;
+  }
+}

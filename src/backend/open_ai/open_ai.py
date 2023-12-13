@@ -10,6 +10,10 @@ from db.repository import Repository
 from util.util import Util
 
 UNABLE_TO_ASWER = ['en pysty', 'en voi', 'pahoittelut']
+COMMON_WORDS = ['toimeentulo', 'meno', 'on', 'ei', 'ole', 'jos']
+
+def sortByScore(e):
+    return e[5]
 
 class OpenAi:
     def __init__(self):
@@ -71,16 +75,44 @@ class OpenAi:
         sources = []
 
         embedding_cost = self.get_embedding_cost(Util().num_tokens_from_string(user_input))
+        embedding = self.get_embedding(user_input)['data'][0]['embedding']
+        combined_results = Repository().hybrid_search(benefit, user_input, embedding)
         #Step 1: Get documents related to the user input from database
-        related_docs = Repository().get_top3_similar_docs(benefit, self.get_embedding(user_input)['data'][0]['embedding'])
-        for rl in related_docs:
-            print(rl[3])
-
-        related_docs = list(filter(lambda x: x[3]<self.distance_limit,related_docs))
+        #related_docs = Repository().get_top3_similar_docs(benefit, embedding)
+        #for rl in related_docs:
+        #    print('vector search result', rl[0], rl[2], rl[3])
+        #text_search_docs = Repository().full_text_search(benefit, user_input, COMMON_WORDS, 10)
+        #combined_results = []
+        #for r in text_search_docs:
+        #    print('text search result', r[0], r[2], r[4])
+        #k = 30 # rank constant
+        # RRF algorithm?
+        #for rl in related_docs:
+            #similarity = 1 - rl[3]
+        #    rank = rl[3]
+        #    score = 1/(rank + k)
+        #    el = [x for x in text_search_docs if x[0] == rl[0]]
+        #    if el:
+        #        el_rank = el[0][4]
+        #        score = score + 1/(el_rank + k)
+                #if(score>threshold)
+        #        combined_results.append((rl[0], rl[1], rl[2], rl[3], el[0][4], score))
+        #    else:
+        #       combined_results.append((rl[0], rl[1], rl[2], rl[3], 1, score))
+        #combined_results.sort(key=sortByScore, reverse=True)
+        for rl in combined_results:
+            print('combined result', rl[0], rl[2], rl[3])
+        related_docs = list(combined_results)
+        #related_docs = list(filter(lambda x: x[3]<self.distance_limit,related_docs))
         source_cost = 0
         content = ''
         i=0
-        if len(related_docs) >= 2:
+        if len(related_docs) == 0:
+            messages = [
+                {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
+            ]
+            return Response("Pahoittelut, mutta en osaa vastata kysymykseen.", embedding_cost + source_cost, 'assistant', sources, messages)
+        elif len(related_docs) >= 2:
             for rl in related_docs:
                 content += '<LÄHDE'+ str(i) + '> '+ re.sub(r'######', '', re.sub(r'\n', ' ',rl[1])) + '</LÄHDE'+ str(i) + '>'
                 i += 1
@@ -127,6 +159,9 @@ class OpenAi:
         else:
           for rl in related_docs:
             content += re.sub(r'\n', ' ',rl[1])
+            source = json.loads(rl[2])
+            source['id'] = rl[0]
+            sources.append(json.dumps(source))
         if add_guidance:    
             #content = ''
             system_message = f'''
