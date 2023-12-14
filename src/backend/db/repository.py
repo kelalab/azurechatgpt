@@ -291,21 +291,33 @@ class Repository:
         cur.close()
         return search_results
 
-    def hybrid_search(self, benefit, input, query_embedding, common_words=[], limit=5):
+    common_words = ['miten']
+
+    def hybrid_search(self, benefit, input, query_embedding, limit=5):
         embedding_array = np.array(query_embedding)
+        words = input.split()
+        search_words = []
+        for w in words:
+            a = [y for y in self.common_words if w.lower().startswith(y)]
+            if len(a) == 0:
+                search_words.append(w)
+        #edited_input = " OR ".join(search_words)
+        edited_input = " ".join(search_words)
+        print('edited_input', edited_input)
         register_vector(self.conn)
         cur = self.conn.cursor()
         sql = """
             WITH semantic_search AS (
                 SELECT id, pageContent, metadata, vector, RANK () OVER (ORDER BY vector <=> %(embedding)s) AS rank
                 FROM clause_embeddings
+                WHERE benefit=%(benefit)s
                 ORDER BY vector <=> %(embedding)s
                 LIMIT 20
             ),
             keyword_search AS (
                 SELECT id, pageContent, metadata, vector, RANK () OVER (ORDER BY ts_rank_cd(to_tsvector('finnish', pageContent), query) DESC)
                 FROM clause_embeddings, plainto_tsquery('finnish', %(query)s) query
-                WHERE to_tsvector('finnish', pageContent) @@ query
+                WHERE benefit=%(benefit)s AND to_tsvector('finnish', pageContent) @@ query
                 ORDER BY ts_rank_cd(to_tsvector('finnish', pageContent), query) DESC
                 LIMIT 20
             )
@@ -321,7 +333,7 @@ class Repository:
             LIMIT 5
         """
         k = 60
-        cur.execute(sql, {'query': input, 'embedding': embedding_array, 'k': k})
+        cur.execute(sql, {'query': edited_input, 'embedding': embedding_array, 'k': k, 'benefit': benefit})
         results = cur.fetchall()
         cur.close()
         return results

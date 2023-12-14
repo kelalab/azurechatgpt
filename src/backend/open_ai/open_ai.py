@@ -19,6 +19,11 @@ class OpenAi:
     def __init__(self):
         self.GPT35PROMPTPER1KTKN = 0.003
         self.GPT35COMPLETIONPER1KTKN = 0.004
+        self.GPT3516KPROMPTPER1KTKN = 0.003
+        self.GPT3516KCOMPLETIONPER1KTKN = 0.004
+        self.GPT4TPROMPTPER1KTKN = 0.01
+        self.GPT4TCOMPLETIONPER1KTKN = 0.03
+        self.PRICING = {"gpt-35-turbo-16k": {"prompt": 0.003, "completion": 0.004}, "gpt-35-turbo-1106": {"prompt": 0.001, "completion": 0.002}, "gpt-4-turbo": {"prompt": 0.01, "completion": 0.03}}
 
         # we have to be have some confidence that docs are relevant
         #
@@ -51,7 +56,9 @@ class OpenAi:
 
         )
         print('response', response)
-        cost = response.usage.prompt_tokens / 1000.0 * self.GPT35PROMPTPER1KTKN + response.usage.completion_tokens / 1000.0 * self.GPT35COMPLETIONPER1KTKN
+        cost = response.usage.prompt_tokens / 1000.0 * self.PRICING[AZURE_OPENAI_API_DEPLOYMENT_NAME]['prompt'] + response.usage.completion_tokens / 1000.0 * self.PRICING[AZURE_OPENAI_API_DEPLOYMENT_NAME]['completion']
+
+        #cost = response.usage.prompt_tokens / 1000.0 * self.GPT35PROMPTPER1KTKN + response.usage.completion_tokens / 1000.0 * self.GPT35COMPLETIONPER1KTKN
         #return 'message': response.choices[0].message['content'], 'cost': cost
         return Response(response.choices[0].message['content'],cost,response.choices[0].message['role'])
 
@@ -100,8 +107,11 @@ class OpenAi:
         #    else:
         #       combined_results.append((rl[0], rl[1], rl[2], rl[3], 1, score))
         #combined_results.sort(key=sortByScore, reverse=True)
+        highest_score = 0
         for rl in combined_results:
             print('combined result', rl[0], rl[2], rl[3])
+            if rl[3] > highest_score:
+                highest_score = rl[3]
         related_docs = list(combined_results)
         #related_docs = list(filter(lambda x: x[3]<self.distance_limit,related_docs))
         source_cost = 0
@@ -113,7 +123,7 @@ class OpenAi:
             ]
             return Response("Pahoittelut, mutta en osaa vastata kysymykseen.", embedding_cost + source_cost, 'assistant', sources, messages)
         elif len(related_docs) >= 2:
-            for rl in related_docs:
+            """for rl in related_docs:
                 content += '<LÄHDE'+ str(i) + '> '+ re.sub(r'######', '', re.sub(r'\n', ' ',rl[1])) + '</LÄHDE'+ str(i) + '>'
                 i += 1
             print('content',content)
@@ -155,6 +165,11 @@ class OpenAi:
                 doc = related_docs[idx]
                 source = json.loads(doc[2])
                 source['id'] = doc[0]
+                sources.append(json.dumps(source))"""
+            for rl in related_docs:
+                content += re.sub(r'\n', ' ',rl[1])
+                source = json.loads(rl[2])
+                source['id'] = rl[0]
                 sources.append(json.dumps(source))
         else:
           for rl in related_docs:
@@ -205,7 +220,9 @@ class OpenAi:
                 print('Could not answer')
                 final_response = Response(openai_response.message, embedding_cost + source_cost + openai_response.cost, openai_response.role, list(), messages)
                 return final_response
-         
+        if highest_score < 0.2:
+            final_response = Response('Olen epävarma lähdemateriaalista ja  vastauksestani. \n Tässä vastaukseni: \n' + openai_response.message, embedding_cost + source_cost + openai_response.cost, openai_response.role, sources, messages)
+            return final_response
         final_response = Response(openai_response.message, embedding_cost + source_cost + openai_response.cost, openai_response.role, sources, messages)
         return final_response
     
