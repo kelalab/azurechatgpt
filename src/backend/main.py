@@ -28,7 +28,7 @@ def remove_file(path: str) -> None:
     os.unlink(path)
 
 @app.post('/message')
-def post_message(benefit:str, message: str, session_uuid = None):
+def post_message(benefit:str, message: str, llm:str, systemPrompt: str, session_uuid = None):
     '''Function for sending a single message to openai'''
     session_uuid = reuse_or_generate_uuid(session_uuid)
 
@@ -36,7 +36,7 @@ def post_message(benefit:str, message: str, session_uuid = None):
     # Save user input to db
     repo.insert_conv_question(session_uuid, benefit, message)
 
-    response = OpenAi().process_input_with_retrieval(benefit, message)
+    response = OpenAi().process_input_with_retrieval(benefit, message, llm, systemPrompt)
 
     # Save gpt output to db
     response.response.uuid = repo.insert_conv_answer(session_uuid, benefit, response.response.message, response.response.sources, response.response.cost)

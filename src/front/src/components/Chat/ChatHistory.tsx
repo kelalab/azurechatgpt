@@ -8,13 +8,14 @@ import "./chathistory.css";
 
 interface CostProps extends PropsWithChildren {
   cost?: Number;
+  llm?: string;
 }
 
 const Cost = (props: CostProps) => {
-  const { cost } = props;
+  const { cost, llm } = props;
   return (
     <div className="font-bold amber text-xs py-2">
-      Hinta: {cost?.toFixed(3)}€
+      Hinta: {cost?.toFixed(3)}€ ({llm})
     </div>
   );
 };
@@ -101,7 +102,7 @@ const MessageBox = (props: MessageBoxProps) => {
 };
 
 const ChatHistory = (props: any) => {
-  const { messages, setActiveSource, loading, setThread } = props;
+  const { messages, setActiveSource, loading, setThread, llm } = props;
   console.log("messages: ", messages);
 
   const fetchSource = async (id: String) => {
@@ -147,7 +148,7 @@ const ChatHistory = (props: any) => {
                     );
                   })}
                 </div>
-                <Cost cost={message.cost} />
+                <Cost cost={message.cost} llm={llm} />
               </MessageBox>
             );
           } else

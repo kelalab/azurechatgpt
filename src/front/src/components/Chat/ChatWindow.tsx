@@ -12,6 +12,9 @@ const ChatWindow = (props: any) => {
     setLoading,
     setThread,
     thread,
+    llm,
+    systemPrompt,
+    combinePrompt,
   } = props;
   const addMessage = (message: Message) => {
     setMessages((prev_state) => {
@@ -34,6 +37,7 @@ const ChatWindow = (props: any) => {
         setActiveSource={setActiveSource}
         loading={loading}
         setThread={setThread}
+        llm={llm}
       />
       <ChatInput
         addMessage={addMessage}
@@ -44,6 +48,9 @@ const ChatWindow = (props: any) => {
         setLoading={setLoading}
         thread={thread}
         setThread={setThread}
+        llm={llm}
+        systemPrompt={systemPrompt}
+        combinePrompt={combinePrompt}
       />
     </div>
   );

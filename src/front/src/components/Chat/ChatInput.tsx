@@ -27,6 +27,9 @@ const ChatInput = (props: any) => {
     setLoading,
     thread,
     setThread,
+    llm,
+    systemPrompt,
+    combinePrompt,
   } = props;
   const [input, setInput] = useState("");
   const [benefit, setBenefit] = useState("Toimeentulotuki");
@@ -52,7 +55,7 @@ const ChatInput = (props: any) => {
       addMessage(my_msg);
       setLoading(true);
       const response = await fetch(
-        `/message?benefit=${benefit}&message=${message}`,
+        `/message?benefit=${benefit}&message=${message}&llm=${llm}&systemPrompt=${systemPrompt}&combinePrompt=${combinePrompt}`,
         {
           headers: {
             Accept: "application/json",
@@ -112,7 +115,7 @@ const ChatInput = (props: any) => {
       });
       console.log("messages_to_send", messages_to_send);
       const response = await fetch(
-        `/messages?benefit=${benefit}&session_uuid=${thread}`,
+        `/messages?benefit=${benefit}&session_uuid=${thread}&llm=${llm}&systemPrompt=${systemPrompt}&combinePrompt=${combinePrompt}`,
         {
           headers: {
             Accept: "application/json",

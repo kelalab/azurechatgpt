@@ -4,6 +4,7 @@
 
 body {
   background-color: theme("colors.slate.950");
+  color: lightgray;
 }
 
 /* Track */

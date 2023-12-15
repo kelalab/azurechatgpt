@@ -17,12 +17,6 @@ def sortByScore(e):
 
 class OpenAi:
     def __init__(self):
-        self.GPT35PROMPTPER1KTKN = 0.003
-        self.GPT35COMPLETIONPER1KTKN = 0.004
-        self.GPT3516KPROMPTPER1KTKN = 0.003
-        self.GPT3516KCOMPLETIONPER1KTKN = 0.004
-        self.GPT4TPROMPTPER1KTKN = 0.01
-        self.GPT4TCOMPLETIONPER1KTKN = 0.03
         self.PRICING = {"gpt-35-turbo-16k": {"prompt": 0.003, "completion": 0.004}, "gpt-35-turbo-1106": {"prompt": 0.001, "completion": 0.002}, "gpt-4-turbo": {"prompt": 0.01, "completion": 0.03}}
 
         # we have to be have some confidence that docs are relevant
@@ -53,10 +47,9 @@ class OpenAi:
             temperature=temperature, 
             max_tokens=max_tokens, 
             deployment_id=deployment_id
-
         )
         print('response', response)
-        cost = response.usage.prompt_tokens / 1000.0 * self.PRICING[AZURE_OPENAI_API_DEPLOYMENT_NAME]['prompt'] + response.usage.completion_tokens / 1000.0 * self.PRICING[AZURE_OPENAI_API_DEPLOYMENT_NAME]['completion']
+        cost = response.usage.prompt_tokens / 1000.0 * self.PRICING[model]['prompt'] + response.usage.completion_tokens / 1000.0 * self.PRICING[model]['completion']
 
         #cost = response.usage.prompt_tokens / 1000.0 * self.GPT35PROMPTPER1KTKN + response.usage.completion_tokens / 1000.0 * self.GPT35COMPLETIONPER1KTKN
         #return 'message': response.choices[0].message['content'], 'cost': cost
@@ -77,7 +70,7 @@ class OpenAi:
                 time.sleep(1)
         return embedding
 
-    def process_input_with_retrieval(self, benefit, user_input, add_guidance = True):
+    def process_input_with_retrieval(self, benefit, user_input, model=AZURE_OPENAI_API_DEPLOYMENT_NAME, provided_prompt="", add_guidance = True):
         delimiter = '```'
         sources = []
 
@@ -179,15 +172,21 @@ class OpenAi:
             sources.append(json.dumps(source))
         if add_guidance:    
             #content = ''
-            system_message = f'''
-            Käyttäydy kuin Kelan asiantuntija. Pysy annetussa kontekstissa. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
-            Vastauksen muotoilun pitää olla:
-            1. Suositus
-            2. Perustelu suositukselle (annetusta kontekstista)
-            3. Listaus kaikista poikkeustilanteista, jotka löytyvät annetusta kontekstista
-            Annettu konteksti: [KONTEKSTI] {content} [/KONTEKSTI]
-            Mikäli et löydä vastausta annetusta kontekstista, kieltäydy kohteliaasti vastaamasta.
-            '''
+            system_message = ''
+            if len(provided_prompt) > 0:
+                system_message = provided_prompt
+                system_message = system_message.replace("{context}", content)
+                print('provided system_message', system_message)
+            else:    
+                system_message = f'''
+                Käyttäydy kuin Kelan asiantuntija. Pysy annetussa kontekstissa. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
+                Vastauksen muotoilun pitää olla:
+                1. Suositus
+                2. Perustelu suositukselle (annetusta kontekstista)
+                3. Listaus kaikista poikkeustilanteista, jotka löytyvät annetusta kontekstista
+                Annettu konteksti: [KONTEKSTI] {content} [/KONTEKSTI]
+                Mikäli et löydä vastausta annetusta kontekstista, kieltäydy kohteliaasti vastaamasta.
+                '''
             # '''
             # Käyttäydy kuin Kelan asiantuntija. Mikäli et löydä vastausta perustelua tukevasta tekstistä, kieltäydy kohteliaasti vastaamasta. Vastaa lyhyesti Kelan päätöksiä tekevän henkilön kysymyksiin.
             # Vastauksen muotoilu tulee olla:
@@ -213,7 +212,7 @@ class OpenAi:
             {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
         ]
 
-        openai_response = self.get_completion_from_messages(messages).response        
+        openai_response = self.get_completion_from_messages(messages, model).response        
         
         for substr in UNABLE_TO_ASWER:
             if re.search(f'(^{substr})|(\s{substr})', openai_response.message.lower()):
