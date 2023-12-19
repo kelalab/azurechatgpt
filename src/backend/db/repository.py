@@ -297,44 +297,49 @@ class Repository:
         embedding_array = np.array(query_embedding)
         words = input.split()
         search_words = []
-        for w in words:
-            a = [y for y in self.common_words if w.lower().startswith(y)]
-            if len(a) == 0:
-                search_words.append(w)
-        #edited_input = " OR ".join(search_words)
-        edited_input = " ".join(search_words)
-        print('edited_input', edited_input)
-        register_vector(self.conn)
-        cur = self.conn.cursor()
-        sql = """
-            WITH semantic_search AS (
-                SELECT id, pageContent, metadata, vector, RANK () OVER (ORDER BY vector <=> %(embedding)s) AS rank
-                FROM clause_embeddings
-                WHERE benefit=%(benefit)s
-                ORDER BY vector <=> %(embedding)s
-                LIMIT 20
-            ),
-            keyword_search AS (
-                SELECT id, pageContent, metadata, vector, RANK () OVER (ORDER BY ts_rank_cd(to_tsvector('finnish', pageContent), query) DESC)
-                FROM clause_embeddings, plainto_tsquery('finnish', %(query)s) query
-                WHERE benefit=%(benefit)s AND to_tsvector('finnish', pageContent) @@ query
-                ORDER BY ts_rank_cd(to_tsvector('finnish', pageContent), query) DESC
-                LIMIT 20
-            )
-            SELECT
-                COALESCE(semantic_search.id, keyword_search.id) AS id,
-                COALESCE(semantic_search.pageContent, keyword_search.pageContent) AS pageContent,
-                COALESCE(semantic_search.metadata, keyword_search.metadata) AS metadata,
-                COALESCE(1.0 / (%(k)s + semantic_search.rank), 0.0) +
-                COALESCE(1.0 / (%(k)s + keyword_search.rank), 0.0) AS score
-            FROM semantic_search
-            FULL OUTER JOIN keyword_search ON semantic_search.id = keyword_search.id
-            ORDER BY score DESC
-            LIMIT 5
-        """
-        k = 60
-        cur.execute(sql, {'query': edited_input, 'embedding': embedding_array, 'k': k, 'benefit': benefit})
-        results = cur.fetchall()
-        cur.close()
-        return results
+        try:
+            for w in words:
+                a = [y for y in self.common_words if w.lower().startswith(y)]
+                if len(a) == 0:
+                    search_words.append(w)
+            #edited_input = " OR ".join(search_words)
+            edited_input = " ".join(search_words)
+            print('edited_input', edited_input)
+            register_vector(self.conn)
+            cur = self.conn.cursor()
+            sql = """
+                WITH semantic_search AS (
+                    SELECT id, pageContent, metadata, vector, RANK () OVER (ORDER BY vector <=> %(embedding)s) AS rank
+                    FROM clause_embeddings
+                    WHERE benefit=%(benefit)s
+                    ORDER BY vector <=> %(embedding)s
+                    LIMIT 20
+                ),
+                keyword_search AS (
+                    SELECT id, pageContent, metadata, vector, RANK () OVER (ORDER BY ts_rank_cd(to_tsvector('finnish', pageContent), query) DESC)
+                    FROM clause_embeddings, plainto_tsquery('finnish', %(query)s) query
+                    WHERE benefit=%(benefit)s AND to_tsvector('finnish', pageContent) @@ query
+                    ORDER BY ts_rank_cd(to_tsvector('finnish', pageContent), query) DESC
+                    LIMIT 20
+                )
+                SELECT
+                    COALESCE(semantic_search.id, keyword_search.id) AS id,
+                    COALESCE(semantic_search.pageContent, keyword_search.pageContent) AS pageContent,
+                    COALESCE(semantic_search.metadata, keyword_search.metadata) AS metadata,
+                    COALESCE(1.0 / (%(k)s + semantic_search.rank), 0.0) +
+                    COALESCE(1.0 / (%(k)s + keyword_search.rank), 0.0) AS score
+                FROM semantic_search
+                FULL OUTER JOIN keyword_search ON semantic_search.id = keyword_search.id
+                ORDER BY score DESC
+                LIMIT 5
+            """
+            k = 60
+            cur.execute(sql, {'query': edited_input, 'embedding': embedding_array, 'k': k, 'benefit': benefit})
+            results = cur.fetchall()
+            cur.close()
+            return results
+        except psycopg2.errors.UndefinedTable:
+            self.conn.rollback()
+            self.create_table("clause_embeddings")
+            return self.hybrid_search(benefit, input, query_embedding, limit)
 

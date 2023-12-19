@@ -44,7 +44,7 @@ def post_message(benefit:str, message: str, llm:str, systemPrompt: str, session_
     return {'session_uuid': session_uuid, 'response': response.response, 'messages': response.messages}
 
 @app.post('/messages')
-def post_messages(benefit: str, data: MessageList, session_uuid = None):
+def post_messages(benefit: str, data: MessageList, llm:str, systemPrompt: str, session_uuid = None):
     '''Function for sending the message chain to openai to continue the conversation'''
     session_uuid = reuse_or_generate_uuid(session_uuid)
     #TODO: this method is untested and unfinished, need to begin with getting the message chain in the response from the initial message
@@ -61,7 +61,7 @@ def post_messages(benefit: str, data: MessageList, session_uuid = None):
     # Save user input to db
     repo.insert_conv_question(session_uuid, benefit, data.data[-1].content)
 
-    response = OpenAi().process_input_with_retrieval(benefit, combined)
+    response = OpenAi().process_input_with_retrieval(benefit, combined, llm, systemPrompt)
     #response = OpenAi().get_completion_from_messages(dict_data)
 
     # Save gpt output to db
