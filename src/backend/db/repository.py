@@ -46,6 +46,21 @@ class Repository:
         self.conn.commit()
         cur.close()
 
+    def create_bot_table(self):
+        cur = self.conn.cursor()
+        table_create_command = f'''
+        CREATE TABLE bots (
+            id text primary key,
+            timestamp timestamptz,
+            creator text,
+            session_uuid text,
+            public boolean
+            );
+            '''
+        cur.execute(table_create_command)
+        self.conn.commit()
+        cur.close()
+
     def create_conversations_table(self):
         cur = self.conn.cursor()
         table_create_command = f'''

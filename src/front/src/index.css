@@ -7,6 +7,11 @@ body {
   color: lightgray;
 }
 
+h1 {
+  color: theme("colors.sky.600");
+  font-size: theme("fontSize.2xl");
+}
+
 /* Track */
 ::-webkit-scrollbar-track {
   background: theme("colors.slate.900");
