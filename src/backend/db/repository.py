@@ -13,6 +13,7 @@ import csv
 
 from model.constants import DB_HOST
 from model.document import Document
+from model.bot import Bot
 
 def adapt_dict(dict_var):
     return AsIs("'" + json.dumps(dict_var) + "'")
@@ -27,6 +28,10 @@ register_uuid()
 class Repository:
     def __init__(self):
         self.conn = psycopg2.connect(database='embeddings', user=os.environ['DB_USER'], password=os.environ['DB_PASS'], host=DB_HOST)
+
+
+    def close(self):
+        self.conn.close()
 
     def create_table(self, name='embeddings'):
         cur = self.conn.cursor()
@@ -51,15 +56,72 @@ class Repository:
         table_create_command = f'''
         CREATE TABLE bots (
             id text primary key,
-            timestamp timestamptz,
+            name text,
+            description text,
+            prompt text,
+            model text,
+            temperature float,
             creator text,
-            session_uuid text,
+            timestamp timestamptz,
             public boolean
             );
             '''
         cur.execute(table_create_command)
         self.conn.commit()
         cur.close()
+
+    def update_bot(self, id, data):
+        pass
+
+    def create_bot(self, data:Bot):
+        cur = self.conn.cursor()
+        try:
+            insert_command = '''
+             INSERT INTO bots (id, name, description, prompt, model, temperature, creator, rag, public) VALUES ( %(id)s, %(name)s, %(description)s, %(prompt)s, %(model)s, %(temperature)s, %(creator)s, %(rag)s, %(public)s )
+            '''
+            cur.execute(insert_command, {"id": data.id, "name":data.name, "description":data.description, "prompt":data.prompt, "model":data.model, "temperature": data.temperature, "creator":data.creator, "rag": data.rag, "public": data.public})
+            self.conn.commit()
+            cur.close()
+            return data.id
+        except psycopg2.errors.UndefinedTable:
+            self.conn.rollback()
+            cur.close()
+            self.create_bot_table()
+            self.create_bot(data)
+        
+
+    def get_bot(self, id):
+        cur = self.conn.cursor()
+        try:
+            get_bot_cmd = f'''
+            SELECT id, name, description, prompt, model, temperature, creator, rag, public from bots where id=\'{id}\'
+            '''
+            cur.execute(get_bot_cmd)
+            result = cur.fetchone()
+            cur.close()
+            return result
+        except psycopg2.errors.UndefinedTable:
+            self.conn.rollback()
+            cur.close()
+            self.create_bot_table()
+            self.get_bot(id)
+    
+    def get_bots(self, name):
+        cur = self.conn.cursor()
+        try:
+            get_bot_cmd = '''
+            SELECT id, name, description, prompt, model, temperature, creator, rag, public FROM bots WHERE creator=%(name)s
+            '''
+            cur.execute(get_bot_cmd, {"name": name})
+            result = cur.fetchall()
+            cur.close()
+            return result
+        except psycopg2.errors.UndefinedTable:
+            self.conn.rollback()
+            cur.close()
+            self.create_bot_table()
+            self.get_bots(name)
+
 
     def create_conversations_table(self):
         cur = self.conn.cursor()
@@ -132,7 +194,8 @@ class Repository:
             self.conn.rollback()
             self.create_conversations_table()
             return self.insert_conv_question(session_uuid, benefit, message)
-        except psycopg2.errors.UndefinedColumn:
+        except psycopg2.errors.UndefinedColumn as udfcol:
+            print(udfcol)
             self.conn.rollback()
             self.alter_conversations_table()
             return self.insert_conv_question(session_uuid, benefit, message)

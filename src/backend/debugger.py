@@ -33,12 +33,14 @@ class Debugger:
 
     def __init__(
         self,
+        assistantId: str ,
         debug:bool = False
     ):
         """
         Create a OpenAIDocumentEmbedder component. 
         """
         self.debug = debug
+        self.assistantId = assistantId
         # if the user does not provide the API key, check if it is set in the module client
         
 

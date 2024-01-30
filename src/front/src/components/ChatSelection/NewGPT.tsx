@@ -1,10 +1,11 @@
 import { FaCirclePlus } from "react-icons/fa6";
-import GPT from "./Gpt";
+import GPT, {GPTProps} from "./Gpt";
 
-const NewGPT = () => {
+const NewGPT = (props: GPTProps) => {
+  const {description} = props;
   return (
     <div>
-      <GPT icon={<FaCirclePlus size={48} />} name="Uusi" href="chat/new" />
+      <GPT icon={<FaCirclePlus size={48} />} name="Uusi" href="chat/new" description={description}/>
     </div>
   );
 };

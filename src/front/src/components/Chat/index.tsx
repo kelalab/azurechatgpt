@@ -1,17 +1,37 @@
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import TopBar from "../Layout/TopBar";
 import { v4 } from "uuid";
 import ChatWindow from "./ChatWindow";
+import ActiveSource from "./ActiveSource";
 
 const ChatRoot = (props) => {
-  const { title } = props;
+  const { title, id, prompt } = props;
+
+  const [name, setName] = useState(title);
+  // we should track if user made changes to settings
+  const [changed, setChanged] = useState(false)
+
+  const fetchChatConfig = async() => {
+    const configResp = await fetch(`/bot/${id}`);
+    const configJSON = await configResp.json()
+    if(configJSON){
+      setSystemPrompt(configJSON.prompt)
+      setName(configJSON.name)
+      setLlm(configJSON.model)
+    }
+  }
+
+  useEffect(() => {
+    fetchChatConfig()
+  }, [])
+
   const [activeSource, setActiveSource] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [thread, setThread] = useState(v4());
   const [showSettings, setShowSettings] = useState(false);
   const [llm, setLlm] = useState("gpt-35-turbo-16k");
-  const [systemPrompt, setSystemPrompt] = useState("");
+  const [systemPrompt, setSystemPrompt] = useState(prompt);
   const [combinePrompt, setCombinePrompt] = useState("");
 
   const setDefaults = () => {
@@ -43,7 +63,7 @@ const ChatRoot = (props) => {
     }
   }, []);
 
-  const handleLlmSelect = (e, v) => {
+  const handleLlmSelect = (e: ChangeEvent) => {
     //console.log("handleLlmSelect", e);
     setLlm(e.target.value);
     localStorage.setItem("llm", e.target.value);
@@ -61,7 +81,7 @@ const ChatRoot = (props) => {
 
   return (
     <div className="w-full h-full p-2 items-center flex flex-col overflow-hidden">
-      <TopBar icon="/ai-icon.png" title={title || "Selittäjä"}>
+      <TopBar icon="/ai-icon.png" title={name || "Selittäjä"}>
         <div className="p-2">
           {/* <label className="text-white mr-4">Valitse etuus:</label>
            <select className="p-4 border-white border-2 rounded-lg bg-slate-950 text-white">
@@ -101,9 +121,9 @@ const ChatRoot = (props) => {
             <div className="flex items-center gap-2 justify-between">
               System prompt:
               <textarea
-                class="bg-transparent p-2 border-2"
-                rows="6"
-                cols="70"
+                className="bg-transparent p-2 border-2"
+                rows={6}
+                cols={70}
                 value={systemPrompt}
                 onChange={(e) => changeSystemPrompt(e)}
               ></textarea>
@@ -111,9 +131,9 @@ const ChatRoot = (props) => {
             <div className="flex items-center gap-2 justify-between">
               Yhdistely prompt:
               <textarea
-                class="bg-transparent p-2 border-2"
-                rows="6"
-                cols="70"
+                className="bg-transparent p-2 border-2"
+                rows={6}
+                cols={70}
                 value={combinePrompt}
                 onChange={(e) => changeCombinePrompt(e)}
               ></textarea>
@@ -132,6 +152,7 @@ const ChatRoot = (props) => {
           llm={llm}
           systemPrompt={systemPrompt}
           combinePrompt={combinePrompt}
+          assistantId={id}
         />
         {activeSource && (
           <div className="flex-1 overflow-y-auto chat-window border-l-2 px-2">

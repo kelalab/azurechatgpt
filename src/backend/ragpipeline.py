@@ -27,7 +27,7 @@ class RAGPipeline:
         self.pipeline.connect("retriever", "prompt_builder.documents")
         self.pipeline.connect("prompt_builder.prompt", "llm.prompt")
         self.pipeline.connect("llm.replies", "answer_builder.replies")
-        self.pipeline.connect("llm.metadata", "answer_builder.metadata")
+        self.pipeline.connect("llm.meta", "answer_builder.meta")
         self.pipeline.connect("retriever", "answer_builder.documents")
 
     def run(self, query: str) -> Answer:

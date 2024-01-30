@@ -1,10 +1,22 @@
-import { useEffect, useState } from "react";
+import { ChangeEvent, MouseEvent, PropsWithChildren, useEffect, useState } from "react";
 import TopBar from "../Layout/TopBar";
 import { v4 } from "uuid";
 import ChatWindow from "./ChatWindow";
 
-const ChatCreator = () => {
-  const [activeSource, setActiveSource] = useState("");
+interface CreatorProps extends PropsWithChildren {
+  newChatName: string;
+  setNewChatName: Function;
+  newChatSystemPrompt: string;
+  setNewChatSystemPrompt: Function;
+  newChatDescription: string;
+  setNewChatDescription: Function;
+  uploadFile: Function;
+  newChatId: string;
+  save: Function;
+}
+
+const ChatCreator = (props: CreatorProps) => {
+  const { newChatName, setNewChatName, newChatSystemPrompt, setNewChatSystemPrompt, newChatDescription, setNewChatDescription, uploadFile, newChatId, save } = props;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [thread, setThread] = useState(v4());
@@ -12,18 +24,97 @@ const ChatCreator = () => {
   const [llm, setLlm] = useState("gpt-35-turbo-16k");
   const [systemPrompt, setSystemPrompt] = useState("");
 
+  const functions_for_llm = [
+    {
+      type: "function",
+      function: {
+        name: "setAssistantName",
+        description: "Set name for a new openai assistant",
+        parameters: {
+          type: "object",
+          properties: {
+            name: {
+              type: "string",
+              description: 'Name of the new assistant, e.g. MyAssistant',
+            },
+          },
+          required: ["name"],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "setAssistantSystemPrompt",
+        description: "Set system prompt for a new openai assistant",
+        parameters: {
+          type: "object",
+          properties: {
+            prompt: {
+              type: "string",
+              description: 'The complete system prompt for a new assistant',
+            },
+          },
+          required: ["prompt"],
+        },
+      },
+    },
+    {
+      type: "function",
+      function: {
+        name: "setAssistantDescription",
+        description: "Set brief description for a new openai assistant",
+        parameters: {
+          type: "object",
+          properties: {
+            description: {
+              type: "string",
+              description: 'Brief description of the assistant',
+            },
+          },
+          required: ["description"],
+        },
+      },
+    },
+  ]
+
+  const setAssistantName = (name: string) => {
+    console.log('setAssistantName called')
+    setNewChatName(name)
+  }
+
+  const setAssistantSystemPrompt = (prompt: string) => {
+    console.log('setAssistantSystemPrompt called')
+    setNewChatSystemPrompt(prompt)
+  }
+
+  const setAssistantDescription = (description: string) => {
+    console.log("setAssistantDescription called")
+    setNewChatDescription(description)
+  }
+
   const setDefaults = () => {
-    const defaultSystem = `CreatorBot is designed to assist the user in creating a new system prompt for a another ai assistant. Answer with a system prompt for the new bot.`;
-    localStorage.setItem("creatorSystemPrompt", defaultSystem);
+    const defaultSystem = `CreatorBot is designed to assist the user in creating a new ai assistant.
+    Start by asking user what the new assistant will be used for.
+    Next ask the user if they wish to generate a name for the assistant. Generate a name for the if the user wishes so and
+    ALWAYS ask for confimation about the generated name.
+
+    After you have got confirmation from the that they accept the generated name, call function setAssistantName and continue with the next step.
+    Provide user with an internal system prompt suitable for the ai assistant. You can ask the user questionss that help CreatorBot form a system promt.
+    ALWAYS ask for confimation that the prompt is acceptable.
+
+    Finally, create a short summarizing description (max 100 characters) of the assistant and ask the user for confirmation.
+    `;
+    //localStorage.setItem("creatorSystemPrompt", defaultSystem);
     setSystemPrompt(defaultSystem);
 
     const defaultLlm = "gpt-35-turbo-16k";
-    localStorage.setItem("creatorllm", defaultLlm);
+    //localStorage.setItem("creatorllm", defaultLlm);
     setLlm(defaultLlm);
   };
 
   useEffect(() => {
-    const _llm = localStorage.getItem("creatorllm");
+    /*const _llm = localStorage.getItem("creatorllm");
     if (_llm && _llm !== llm) {
       setLlm(_llm);
     }
@@ -31,22 +122,28 @@ const ChatCreator = () => {
     if (sPrompt && sPrompt !== systemPrompt) {
       setSystemPrompt(sPrompt);
     }
-
-    if (!sPrompt || sPrompt.length === 0) {
+    */
+    if (!systemPrompt || systemPrompt.length === 0) {
       setDefaults();
     }
   }, []);
 
-  const handleLlmSelect = (e, v) => {
+  const handleLlmSelect = (e: ChangeEvent<HTMLSelectElement>) => {
     //console.log("handleLlmSelect", e);
-    setLlm(e.target.value);
-    localStorage.setItem("creatorllm", e.target.value);
+    setLlm(e.target?.value);
+    //localStorage.setItem("creatorllm", e.target.value);
   };
 
-  const changeSystemPrompt = (e) => {
-    localStorage.setItem("creatorSystemPrompt", e.target.value);
-    setSystemPrompt(e.target.value);
+  const changeSystemPrompt = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    localStorage.setItem("creatorSystemPrompt", target.value);
+    //setSystemPrompt(e.target.value);
   };
+
+  const saveAssistant = async (e: MouseEvent) => {
+    console.log("saveAssistant called", e);
+    save()
+  }
 
   return (
     <div className="w-full h-full p-2 items-center flex flex-col overflow-hidden">
@@ -59,51 +156,35 @@ const ChatCreator = () => {
           </select>*/}
         </div>
       </TopBar>
-      <div className="flex flex-col w-full items-center justify-center">
-        <button
-          className="border-2 p-2"
-          onClick={() => setShowSettings(!showSettings)}
-        >
-          {showSettings
-            ? "Piilota keskustelun asetukset"
-            : "Keskustelun asetukset"}
-        </button>
-        {showSettings && (
-          <div className="flex flex-col gap-3 p-4 border-2">
-            <div className="flex flex-col items-center gap-2">
-              <button className="border-2 p-2" onClick={() => setDefaults()}>
-                Palauta oletukset
-              </button>
-            </div>
-            <div className="flex items-center gap-2 justify-between">
-              Kielimalli:{" "}
-              <select
-                value={llm}
-                onChange={handleLlmSelect}
-                className="bg-transparent p-2 border-2 rounded-md"
-              >
-                <option value="gpt-35-turbo-16k">GPT 3.5 Turbo 16k</option>
-                <option value="gpt-35-turbo-1106">GPT 3.5 Turbo 1106</option>
-                <option value="gpt-4-turbo">GPT 4 Turbo</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2 justify-between">
-              System prompt:
-              <textarea
-                class="bg-transparent p-2 border-2"
-                rows="6"
-                cols="70"
-                value={systemPrompt}
-                onChange={(e) => changeSystemPrompt(e)}
-              ></textarea>
-            </div>
-          </div>
-        )}
+      <div className="flex flex-col w-full items-left px-10 justify-center">
+        <div><label>Name of the assistant: </label><input value={newChatName} /></div>
+        <div><label>Description of the assistant: </label><input value={newChatDescription} /></div>
+        <div><label>Prompt of the assistant: </label><span>{newChatSystemPrompt}</span></div>
+        <div className="flex items-center gap-2 justify-between">
+          Kielimalli:{" "}
+          <select
+            value={llm}
+            onChange={handleLlmSelect}
+            className="bg-transparent p-2 border-2 rounded-md"
+          >
+            <option value="gpt-35-turbo-16k">GPT 3.5 Turbo 16k</option>
+            <option value="gpt-35-turbo-1106">GPT 3.5 Turbo 1106</option>
+            <option value="gpt-4-turbo">GPT 4 Turbo</option>
+          </select>
+        </div>
+        <div className="border-2 p-4 mt-2 rounded-lg">
+          <label className="primary">Choose a file for the new assistant</label>
+          <input type="file" onChange={(e) => uploadFile(e)} />
+        </div>
+        <div className="flex justify-evenly mt-4">
+          <button className="border-2 px-4 py-2" onClick={(e) => saveAssistant(e)}>Save</button>
+          <button className="border-2 px-4 py-2">Cancel</button>
+        </div>
       </div>
-      <div className="flex w-full h-full">
+      <hr />
+      <div className="flex flex-col w-full h-full">
+        <span className="mt-4">I can help you create an assistant, please start a chat with me if you wish so.</span>
         <ChatWindow
-          activeSource={activeSource}
-          setActiveSource={setActiveSource}
           thread={thread}
           setThread={setThread}
           loading={loading}
@@ -111,17 +192,17 @@ const ChatCreator = () => {
           llm={llm}
           systemPrompt={systemPrompt}
           combinePrompt={null}
+          useHay={false}
+          rag={false}
+          functions_for_llm={functions_for_llm}
+          setAssistantName={setAssistantName}
+          setAssistantSystemPrompt={setAssistantSystemPrompt}
+          assistantId={newChatId}
+          setAssistantDescription={setAssistantDescription}
         />
-        {activeSource && (
-          <div className="flex-1 overflow-y-auto chat-window border-l-2 px-2">
-            <ActiveSource
-              activeSource={activeSource}
-              setActiveSource={setActiveSource}
-            />
-          </div>
-        )}
       </div>
     </div>
   );
 };
 export default ChatCreator;
+'[{"type":"function","function":{"name":"setAssistantName","description":"Set name for a new openai assistant","parameters":{"type":"object","properties":{"name":{"type":"string","description":"Name of the new assistant, e.g. /"MyAssistant/""}},"required":["name"]}}},{"type":"function","function":{"name":"setAssistantSystemPrompt","description":"Set system prompt for a new openai assistant","parameters":{"type":"object","properties":{"prompt":{"type":"string","description":"The complete system prompt for a new assistant"}},"required":["prompt"]}}},{"type":"function","function":{"name":"setAssistantDescription","description":"Set brief description for a new openai assistant","parameters":{"type":"object","properties":{"description":{"type":"string","description":"Brief description of the assistant"}},"required":["description"]}}}]'
