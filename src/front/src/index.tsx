@@ -2,8 +2,15 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
+import "../kds/dist/css/themes/kela-fonts.min.css";
+import "../kds/dist/css/themes/kela.min.css";
+import "../kds/dist/css/reset.min.css";
+import "../kds/dist/css/global.min.css";
+import "../kds/dist/css/components.min.css";
+import "../kds/dist/css/utils.min.css";
+//import "../kds/dist/esm/index";
+
 import "./index.css";
-import App from "./App";
 import Select from "./routes/select";
 import Chat from "./routes/chat";
 import NewChat from "./routes/newchat";

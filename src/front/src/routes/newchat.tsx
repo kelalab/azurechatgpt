@@ -53,14 +53,7 @@ const NewChat = () => {
 
   return (
     <Layout>
-      <div className="flex h-full w-full overflow-hidden">
-        <div className="flex-1 w-1/2">
-          <ChatCreator save={save} newChatName={newChatName} newChatSystemPrompt={newChatSystemPrompt} setNewChatName={setNewChatName} setNewChatSystemPrompt={setNewChatSystemPrompt} uploadFile={uploadFile} newChatId={newChatId} newChatDescription={newChatDescription} setNewChatDescription={setNewChatDescription}/>
-        </div>
-        <div className="flex-1 w-1/2">
-          <ChatRoot title={newChatName} prompt={newChatSystemPrompt} id={newChatId} rag={newChatFile ? true : false} />
-        </div>
-      </div>
+        <ChatCreator save={save} newChatName={newChatName} newChatSystemPrompt={newChatSystemPrompt} setNewChatName={setNewChatName} setNewChatSystemPrompt={setNewChatSystemPrompt} uploadFile={uploadFile} newChatId={newChatId} newChatDescription={newChatDescription} setNewChatDescription={setNewChatDescription}/>
     </Layout>
   );
 };

@@ -1,8 +1,13 @@
 import { PropsWithChildren } from "react"
+import { Footer as KelaFooter, Container, FooterCopyright } from '../../../kds/dist/esm/index';
 
 interface FooterProps extends PropsWithChildren{}
 
 const Footer = (props: FooterProps) => {
-    return <div className="flex items-center gap-4 p-2 dark:bg-slate-900">footer<span className="primary self-end">© Kelalab 2024</span></div>
+    return <KelaFooter isLegacy={false} isCopyrightOnly={true}>
+                <Container maxWidth="2xl" fluid={true}>
+                    <FooterCopyright>© Kelalab 2024</FooterCopyright>
+                </Container>
+            </KelaFooter>
 }
 export default Footer

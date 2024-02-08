@@ -2,88 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: theme("colors.slate.950");
-  color: lightgray;
+
+.kds-heading--1, h1 {
+  font-size: var(--kds-font-size-5xl);
+  margin: 4.5rem 0 1.5rem;
 }
 
-h1 {
-  color: theme("colors.sky.600");
-  font-size: theme("fontSize.3xl");
+.kds-heading--2, h2 {
+  font-size: var(--kds-font-size-4xl);
 }
 
-h2 {
-  color: theme("colors.sky.600");
-  font-size: theme("fontSize.2xl");
+.kds-container {
+  max-width: 1440px;
 }
 
-h3 {
-  font-size: theme("fontSize.lg");
+#root{
+  min-height: 100vh;
 }
 
-.primary {
-    color: theme("colors.sky.600");
-    font-weight: bold;
+.return svg{
+  margin-top: 0.1rem;
+  margin-bottom: 0.1rem;
 }
 
-/* Track */
-::-webkit-scrollbar-track {
-  background: theme("colors.slate.900");
-}
-
-/* width */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-/* Handle */
-::-webkit-scrollbar-thumb {
-  background: #888;
-  background: theme("colors.sky.800");
-  border-radius: 5px;
-}
-
-/* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-  background: theme("colors.blue.900");
-}
-
-a {
-  color: theme("colors.sky.500");
-}
-
-.amber {
-  color: theme("colors.amber.500");
-}
-
-@media screen and (prefers-color-scheme: light) {
-  body {
-    background-color: rgb(233, 235, 250);
-    color: black;
-  }
-  * {
-    border-color: theme("colors.gray.300");
-  }
-  ::-webkit-scrollbar-track {
-    background: theme("colors.slate.300");
-  }
-  ::-webkit-scrollbar-thumb {
-    background: theme("colors.sky.600");
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: theme("colors.sky.700");
-  }
-
-  a {
-    color: theme("colors.sky.700");
-  }
-
-  .amber {
-    color: theme("colors.amber.600");
-  }
-}
-
-.chat-window {
-  max-height: calc(100vh - 106px);
+svg {
+  display: inline-block;
 }

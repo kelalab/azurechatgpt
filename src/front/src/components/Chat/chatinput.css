@@ -1,4 +1,4 @@
-input {
+/* input {
   background-color: theme("colors.slate.950");
   color: lightgray;
 }
@@ -14,7 +14,6 @@ button {
   }
 
   .input-wrapper {
-    /* background-color: rgb(243, 243, 243); */
     background-color: transparent;
   }
 
@@ -22,4 +21,4 @@ button {
     color: black;
     background-color: theme("colors.indigo.200");
   }
-}
+} */

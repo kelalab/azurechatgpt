@@ -2,6 +2,8 @@ import { ChangeEvent, MouseEvent, PropsWithChildren, useEffect, useState } from 
 import TopBar from "../Layout/TopBar";
 import { v4 } from "uuid";
 import ChatWindow from "./ChatWindow";
+import { Accordion, AccordionBody, AccordionToggle, Checkbox, Heading, Input, InputGroup, Select, Text, Textarea } from "../../../kds/dist/esm/index";
+import InputLabel from "../../../kds/dist/esm/InputLabel";
 
 interface CreatorProps extends PropsWithChildren {
   newChatName: string;
@@ -146,42 +148,55 @@ const ChatCreator = (props: CreatorProps) => {
   }
 
   return (
-    <div className="w-full h-full p-2 items-center flex flex-col overflow-hidden">
-      <TopBar icon="/ai-icon.png" title="ChatCreator">
-        <div className="p-2">
-          {/* <label className="text-white mr-4">Valitse etuus:</label>
-           <select className="p-4 border-white border-2 rounded-lg bg-slate-950 text-white">
-            <option>Toimeentulotuki</option>
-            <option>Asumistuki</option>
-          </select>*/}
-        </div>
-      </TopBar>
-      <div className="flex flex-col w-full items-left px-10 justify-center">
-        <div><label>Name of the assistant: </label><input value={newChatName} /></div>
-        <div><label>Description of the assistant: </label><input value={newChatDescription} /></div>
-        <div><label>Prompt of the assistant: </label><span>{newChatSystemPrompt}</span></div>
-        <div className="flex items-center gap-2 justify-between">
-          Kielimalli:{" "}
-          <select
+    <div className="w-full p-8 flex flex-col overflow-hidden gap-4">
+      <div className="bg-kela-blue-80 -ml-24 -mr-24 px-24 py-6">
+          <Heading as="h2" className="pb-4 text-white ">Luo uusi avustaja</Heading>
+          <Text className="text-white">Tällä sivulla voit luoda uuden avustajan omaan tai julkiseen käyttöön.</Text>
+      </div>
+      <Heading as="h2" className="pb-4 text-white">Avustajan asetukset</Heading>
+      <Accordion id="chat-settings" isOpen={showSettings}>
+        <AccordionToggle className="dark:hover:bg-kela-gray-80 dark:aria-expanded:bg-kela-gray-80" onClick={() => setShowSettings(!showSettings)}>Uuden avustajan asetukset</AccordionToggle>
+        <AccordionBody>
+        <InputGroup>
+          <InputLabel htmlFor="name-assistant">Name of the assistant: </InputLabel>
+          <Input id="name-assistant" value={newChatName} />
+        </InputGroup>
+        <InputGroup>
+          <InputLabel htmlFor="description-assistant">Description of the assistant: </InputLabel>
+          <Textarea id="description-assistant" value={newChatDescription} />
+        </InputGroup>
+        <InputGroup>
+          <InputLabel htmlFor="prompt-assistant">Prompt of the assistant: </InputLabel>
+          <Textarea id="prompt-assistant" value={newChatSystemPrompt}/>
+        </InputGroup>
+        <InputGroup>
+          <InputLabel htmlFor="public-assistant">Julkinen</InputLabel>
+          <Checkbox id="public-assistant"></Checkbox>
+        </InputGroup>
+        <InputGroup>
+        <InputLabel>Kielimalli:</InputLabel>
+          <Select
             value={llm}
             onChange={handleLlmSelect}
-            className="bg-transparent p-2 border-2 rounded-md"
+            defaultValue="gpt-35-turbo-16k"
           >
             <option value="gpt-35-turbo-16k">GPT 3.5 Turbo 16k</option>
             <option value="gpt-35-turbo-1106">GPT 3.5 Turbo 1106</option>
             <option value="gpt-4-turbo">GPT 4 Turbo</option>
-          </select>
-        </div>
+          </Select>
+        </InputGroup>
         <div className="border-2 p-4 mt-2 rounded-lg">
           <label className="primary">Choose a file for the new assistant</label>
           <input type="file" onChange={(e) => uploadFile(e)} />
         </div>
-        <div className="flex justify-evenly mt-4">
-          <button className="border-2 px-4 py-2" onClick={(e) => saveAssistant(e)}>Save</button>
-          <button className="border-2 px-4 py-2">Cancel</button>
-        </div>
+        
+        </AccordionBody>
+      </Accordion>
+      <div className="flex justify-evenly mt-4 p-8">
+          <button className="border-2 px-4 py-2" onClick={(e) => saveAssistant(e)}>Tallenna avustaja</button>
+          <button className="border-2 px-4 py-2">Peruuta</button>
       </div>
-      <hr />
+      <Heading as="h2" className="pb-4 text-white">Interaktiivinen assistentti avustajan luontiin</Heading>
       <div className="flex flex-col w-full h-full">
         <span className="mt-4">I can help you create an assistant, please start a chat with me if you wish so.</span>
         <ChatWindow
