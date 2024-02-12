@@ -1,9 +1,10 @@
 import { ChangeEvent, MouseEvent, PropsWithChildren, useEffect, useState } from "react";
-import TopBar from "../Layout/TopBar";
 import { v4 } from "uuid";
 import ChatWindow from "./ChatWindow";
-import { Accordion, AccordionBody, AccordionToggle, Checkbox, Heading, Input, InputGroup, Select, Text, Textarea } from "../../../kds/dist/esm/index";
+import { Accordion, AccordionBody, AccordionToggle, Button, Checkbox, Heading, InputGroup, Select, Text } from "../../../kds/dist/esm/index";
 import InputLabel from "../../../kds/dist/esm/InputLabel";
+import Input from "../Input";
+import Textarea from "../Textarea";
 
 interface CreatorProps extends PropsWithChildren {
   newChatName: string;
@@ -159,7 +160,7 @@ const ChatCreator = (props: CreatorProps) => {
         <AccordionBody>
         <InputGroup>
           <InputLabel htmlFor="name-assistant">Name of the assistant: </InputLabel>
-          <Input id="name-assistant" value={newChatName} />
+          <Input className="dark:bg-transparent dark:text-white dark:border-kela-gray-30" id="name-assistant" value={newChatName} />
         </InputGroup>
         <InputGroup>
           <InputLabel htmlFor="description-assistant">Description of the assistant: </InputLabel>
@@ -171,7 +172,7 @@ const ChatCreator = (props: CreatorProps) => {
         </InputGroup>
         <InputGroup>
           <InputLabel htmlFor="public-assistant">Julkinen</InputLabel>
-          <Checkbox id="public-assistant"></Checkbox>
+          <Checkbox id="public-assistant" className="dark:*:*:bg-transparent"></Checkbox>
         </InputGroup>
         <InputGroup>
         <InputLabel>Kielimalli:</InputLabel>
@@ -179,6 +180,7 @@ const ChatCreator = (props: CreatorProps) => {
             value={llm}
             onChange={handleLlmSelect}
             defaultValue="gpt-35-turbo-16k"
+            className="dark:bg-transparent dark:!color-white after:content-[''] after:border-red"
           >
             <option value="gpt-35-turbo-16k">GPT 3.5 Turbo 16k</option>
             <option value="gpt-35-turbo-1106">GPT 3.5 Turbo 1106</option>
@@ -193,8 +195,8 @@ const ChatCreator = (props: CreatorProps) => {
         </AccordionBody>
       </Accordion>
       <div className="flex justify-evenly mt-4 p-8">
-          <button className="border-2 px-4 py-2" onClick={(e) => saveAssistant(e)}>Tallenna avustaja</button>
-          <button className="border-2 px-4 py-2">Peruuta</button>
+          <Button className="border-2 px-4 py-2" onClick={(e) => saveAssistant(e)}>Tallenna avustaja</Button>
+          <Button appearance="outline" variant="danger" className="border-2 px-4 py-2 dark:bg-transparent dark:hover:bg-kela-gray-100">Peruuta</Button>
       </div>
       <Heading as="h2" className="pb-4 text-white">Interaktiivinen assistentti avustajan luontiin</Heading>
       <div className="flex flex-col w-full h-full">

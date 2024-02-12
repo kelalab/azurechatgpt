@@ -5,6 +5,8 @@ import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa6";
 import "react-loading-skeleton/dist/skeleton.css";
 import "./chathistory.css";
+import ChatMessage from "../../../kds/dist/esm/ChatMessage";
+import Text from "../../../kds/dist/esm/Text";
 
 interface CostProps extends PropsWithChildren {
   cost?: Number;
@@ -32,7 +34,7 @@ const MessageBox = (props: MessageBoxProps) => {
   const { children, right, user, cost, skeleton, message } = props;
   const [evaluation, setEvaluation] = useState(-1);
   const sendEvaluation = async (messageId?: string, score?: number) => {
-    if(!messageId || !score) return;
+    if (!messageId || !score) return;
     const response = await fetch(
       `/thumb?message_id=${messageId}&thumb=${score}`
     );
@@ -41,13 +43,22 @@ const MessageBox = (props: MessageBoxProps) => {
 
   if (right)
     return (
-      <div className="message__wrapper right border-2 rounded-b-xl rounded-tl-xl self-end w-4/5 p-4">
-        <div className="font-bold text-sky-600 p-2">{user}</div>
-        <div className="p-2">{children}</div>
-      </div>
+      <>
+        {/*<div className="message__wrapper right border-2 rounded-b-xl rounded-tl-xl self-end w-4/5 p-4">
+          <div className="font-bold text-sky-600 p-2">{user}</div>
+          <div className="p-2">{children}</div>
+        </div>*/}
+        <ChatMessage position="right" animate={false} name={user}>
+          <Text className="dark:text-kela-gray-100">{children}</Text>
+        </ChatMessage>
+      </>
     );
   return (
-    <SkeletonTheme baseColor="#202020" highlightColor="#444">
+    <>
+    <ChatMessage position="left" loading={skeleton} name={user}>
+      <Text>{children}</Text>
+    </ChatMessage>
+    {/* <SkeletonTheme baseColor="#202020" highlightColor="#444">
       <div className="message__wrapper border-2 rounded-b-xl rounded-tr-xl w-4/5 p-4">
         <div className="font-bold text-sky-600 p-2 flex flex-wrap justify-between">
           {user}
@@ -57,8 +68,8 @@ const MessageBox = (props: MessageBoxProps) => {
               onClick={() => sendEvaluation(message?.uuid, 0)}
               className={
                 evaluation == 0 ?
-                "outline outline-offset-2 rounded-sm outline-2":
-                ""
+                  "outline outline-offset-2 rounded-sm outline-2" :
+                  ""
               }
             >
               <FaThumbsDown color="red" />
@@ -67,8 +78,8 @@ const MessageBox = (props: MessageBoxProps) => {
               onClick={() => sendEvaluation(message?.uuid, 2)}
               className={
                 evaluation == 2 ?
-                "outline outline-offset-2 rounded-sm outline-2":
-                ""
+                  "outline outline-offset-2 rounded-sm outline-2" :
+                  ""
               }
             >
               <div className="-rotate-90">
@@ -79,8 +90,8 @@ const MessageBox = (props: MessageBoxProps) => {
               onClick={() => sendEvaluation(message?.uuid, 4)}
               className={
                 evaluation == 4 ?
-                "outline outline-offset-2 rounded-sm outline-2":
-                ""
+                  "outline outline-offset-2 rounded-sm outline-2" :
+                  ""
               }
             >
               <FaThumbsUp color="green" />
@@ -103,7 +114,8 @@ const MessageBox = (props: MessageBoxProps) => {
           )}
         </div>
       </div>
-    </SkeletonTheme>
+    </SkeletonTheme> */}
+    </>
   );
 };
 
@@ -138,17 +150,17 @@ const ChatHistory = (props: any) => {
                   {message.sources?.map((source) => {
                     // force cast to Source
                     let json = source as unknown as Source;
-                    try{
-                       json = JSON.parse(source);
-                    }catch(e){
+                    try {
+                      json = JSON.parse(source);
+                    } catch (e) {
 
                     }
                     const id = json.id;
                     //console.log("id", id, "json", json);
                     return (
                       <div key={id}>
-                        <a onClick={() => json?.content ? setActiveSource(json.content):() => fetchSource(id)} href={"#"}>
-                          {json["source"]||json?.meta?.filename}
+                        <a onClick={() => json?.content ? setActiveSource(json.content) : () => fetchSource(id)} href={"#"}>
+                          {json["source"] || json?.meta?.filename}
                           {json["Header 1"]}
                           {json["Header 2"] && "/" + json["Header 2"]}
                           {json["Header 3"] && "/" + json["Header 3"]}
@@ -164,14 +176,14 @@ const ChatHistory = (props: any) => {
               </MessageBox>
             );
           } else
-            if(!message?.message?.content){
+            if (!message?.message?.content) {
               return null;
             }
-            return (
-              <MessageBox key={"msg-" + idx} right user="Minä">
-                <div>{message.message.content.replace(/```/g, "")}</div>
-              </MessageBox>
-            );
+          return (
+            <MessageBox key={"msg-" + idx} right user="Minä">
+              <div>{message.message.content.replace(/```/g, "")}</div>
+            </MessageBox>
+          );
         }
       })}
       {loading && <MessageBox skeleton user={AI_NAME}></MessageBox>}

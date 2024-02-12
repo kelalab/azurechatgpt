@@ -1,6 +1,9 @@
 import React, { KeyboardEvent, useEffect, useState } from "react";
 import { RMessage, Message } from "../../types";
 import "./chatinput.css";
+import Input from "../Input";
+import { Button } from "../../../kds/dist/esm";
+import { truncate } from "fs";
 
 const func = (json_msgs: RMessage[]) => {
   let list = [];
@@ -152,13 +155,16 @@ const ChatInput = (props: any) => {
 
       if (json.response.message.tool_calls?.length > 0) {
         console.log('received function call!');
-
+        let visible = false;
+        if (json.response?.message?.content?.length > 0){
+          visible = true
+        }
         const resp_msg: RMessage = {
           uuid: json.response.uuid,
           message: json.response.message,
           cost: json.response.cost,
           sources: json.response.sources,
-          visible: false,
+          visible: visible,
         };
         r_list.push(resp_msg);
         messages_to_send.push(resp_msg)
@@ -244,20 +250,23 @@ const ChatInput = (props: any) => {
   };
 
   return (
-    <div className="input-wrapper flex p-2 border-2 rounded-lg mx-8">
-      <input
-        className="flex-1"
-        onChange={(e) => setInput(e.currentTarget.value)}
-        onKeyUp={handleKey}
-        value={input}
-      />
-      <button
-        className="border-2 p-2 rounded-lg"
-        onClick={() => sendMessage(input)}
-      >
-        Lähetä
-      </button>
-    </div>
+    // <div className="input-wrapper flex p-2 border-2 rounded-lg mx-8">
+    //   <input
+    //     className="flex-1"
+    //     onChange={(e) => setInput(e.currentTarget.value)}
+    //     onKeyUp={handleKey}
+    //     value={input}
+    //   />
+    //   <button
+    //     className="border-2 p-2 rounded-lg"
+    //     onClick={() => sendMessage(input)}
+    //   >
+    //     Lähetä
+    //   </button>
+    // </div>
+    <Input type="search" aria-label="Kirjoita avustajalle viesti" onChange={(e) => setInput(e.currentTarget.value)}
+         onKeyUp={handleKey}
+         value={input} addonAfter={<Button>Lähetä</Button>} />
   );
 };
 export default ChatInput;
