@@ -11,6 +11,7 @@ on:
 env:
   ORGANIZATION: "kelalab"
   IMAGENAME: "selittaja"
+  IMAGE_UI: "selittaja-ui"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,6 +19,11 @@ jobs:
     steps:
       - name: 🌱 Checkout to the branch
         uses: actions/checkout@v4
+
+      - name: 🍏 Build ui image
+        run: |
+          cd ./src/front
+          docker build . -f Dockerfile -t ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGE_UI }}:${{ github.sha }}
 
       - name: 🍏 Build image
         run: |
@@ -29,5 +35,7 @@ jobs:
 
       - name: Build and push webhook image to ghcr
         run: |
+          docker tag ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGE_UI }}:${{ github.sha }} ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGE_UI }}:latest
+          docker push ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGE_UI }}:latest
           docker tag ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:${{ github.sha }} ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:latest
           docker push ghcr.io/${{env.ORGANIZATION}}/${{ env.IMAGENAME }}:latest

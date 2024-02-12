@@ -1,4 +1,18 @@
 services:
+  # ui: 
+  #   build: ../front
+  #   develop:
+  #     watch:
+  #       - action: rebuild
+  #         path: ../front/server
+  #   depends_on:
+  #     - db
+  #     - app
+  #   ports:
+  #     - 8080:8000
+  #   environment:
+  #     - API_HOST=app
+  #     - API_PORT=8000
   app:
     build: .
     develop:

@@ -19,10 +19,7 @@ const rootElement = document.getElementById("root");
 const root = createRoot(rootElement!);
 
 const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <Select />,
-  },
+  
   {
     path: "select",
     element: <Select />,
@@ -34,6 +31,10 @@ const router = createBrowserRouter([
   {
     path: "chat/:chatid",
     element: <Chat />,
+  },
+  {
+    path: "/",
+    element: <Select />,
   },
 ]);
 
