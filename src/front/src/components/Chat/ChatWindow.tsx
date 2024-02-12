@@ -15,6 +15,13 @@ const ChatWindow = (props: any) => {
     llm,
     systemPrompt,
     combinePrompt,
+    useHay,
+    rag,
+    functions_for_llm,
+    setAssistantName,
+    setAssistantSystemPrompt,
+    assistantId,
+    setAssistantDescription
   } = props;
   const addMessage = (message: Message) => {
     setMessages((prev_state) => {
@@ -38,6 +45,7 @@ const ChatWindow = (props: any) => {
         loading={loading}
         setThread={setThread}
         llm={llm}
+        assistantId={assistantId}
       />
       <ChatInput
         addMessage={addMessage}
@@ -51,6 +59,13 @@ const ChatWindow = (props: any) => {
         llm={llm}
         systemPrompt={systemPrompt}
         combinePrompt={combinePrompt}
+        useHay={useHay}
+        rag={rag}
+        functions_for_llm={functions_for_llm}
+        setAssistantName={setAssistantName}
+        setAssistantSystemPrompt={setAssistantSystemPrompt}
+        assistantId={assistantId}
+        setAssistantDescription={setAssistantDescription}
       />
     </div>
   );

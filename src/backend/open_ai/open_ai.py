@@ -1,5 +1,4 @@
-import openai
-import openai.error
+from openai import AzureOpenAI, RateLimitError
 import time
 import re
 import json
@@ -33,50 +32,98 @@ class OpenAi:
         self.token_limit_per_minute = 180000
         self.short_limit = 40000
 
-        openai.api_key = AZURE_OPENAI_API_KEY
-        openai.api_base = 'https://' + AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com' # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
-        openai.api_type = 'azure'
-        openai.api_version = AZURE_OPENAI_API_VERSION
+        client = AzureOpenAI(api_key=AZURE_OPENAI_API_KEY, api_version=AZURE_OPENAI_API_VERSION, azure_endpoint='https://' + AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com', azure_deployment=AZURE_OPENAI_API_DEPLOYMENT_NAME)
+        client.api_key = AZURE_OPENAI_API_KEY
+        #client.base_url = 'https://' + AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com'
+        #client.api_base = 'https://' + AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com' # your endpoint should look like the following https://YOUR_RESOURCE_NAME.openai.azure.com/
+        #openai.api_type = 'azure'
+        #openai.api_version = AZURE_OPENAI_API_VERSION
+        self.client = client
+
+
+    def callWithNonNoneArgs(self, f, *args, **kwargs):
+      print('args', args)
+      print('kwargs', kwargs)
+      kwargsNotNone = {k: v for k, v in kwargs.items() if v is not None}
+      # tools array is considered as string for some reason
+      #kwargsNotNone['tools'] = json.loads(kwargsNotNone.get('tools'))
+      #kwargsNotNone.update(['tools', json.loads(kwargsNotNone.get('tools'))])
+      print('kwargsNotNone',kwargsNotNone)
+      return f(**kwargsNotNone)
 
     # Helper function: get text completion from OpenAI API
     # Note we're using the latest azure gpt-35-turbo-16k model
-    def get_completion_from_messages(self, messages, model=AZURE_OPENAI_API_DEPLOYMENT_NAME, deployment_id=AZURE_OPENAI_API_DEPLOYMENT_NAME, temperature=0, max_tokens=1000):
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=messages,
-            temperature=temperature, 
-            max_tokens=max_tokens, 
-            deployment_id=deployment_id
-        )
+    def get_completion_from_messages(self, messages, model=AZURE_OPENAI_API_DEPLOYMENT_NAME, functions = None, deployment_id=AZURE_OPENAI_API_DEPLOYMENT_NAME, temperature=0, max_tokens=1000):
+        
+        #nonNoneArgs = self.callWithNonNoneArgs(model=model,
+        #    messages=messages,
+        #    tools=functions,
+        #    temperature=temperature, 
+        #    max_tokens=max_tokens )
+        #print(nonNoneArgs)
+        
+        response = self.callWithNonNoneArgs(
+                self.client.chat.completions.create, 
+                model=model,
+                messages=messages,
+                tools=functions,
+                temperature=temperature, 
+                max_tokens=max_tokens,)
+
+        #response = self.client.chat.completions.create(
+        #    self.callWithNonNoneArgs(
+        #        model=model,
+        #        messages=messages,
+        #        tools=functions,
+        #        temperature=temperature, 
+        #        max_tokens=max_tokens,
+        #    )
+        #)
         print('response', response)
         cost = response.usage.prompt_tokens / 1000.0 * self.PRICING[model]['prompt'] + response.usage.completion_tokens / 1000.0 * self.PRICING[model]['completion']
 
         #cost = response.usage.prompt_tokens / 1000.0 * self.GPT35PROMPTPER1KTKN + response.usage.completion_tokens / 1000.0 * self.GPT35COMPLETIONPER1KTKN
         #return 'message': response.choices[0].message['content'], 'cost': cost
-        return Response(response.choices[0].message['content'],cost,response.choices[0].message['role'])
+
+        #content = response.choices[0].message.get('content')
+        content = response.choices[0].message
+        finish_reason = response.choices[0].finish_reason
+        
+        print('finish_reason', finish_reason)
+        print('content', content)
+
+        return Response(message=content,cost=cost,role=content.role, reason=finish_reason)
 
     def get_embedding_cost(self, num_tokens):
         return num_tokens/1000*0.000096
 
     def get_embedding(self, text:str, model='text-embedding-ada-002'):
+        client = AzureOpenAI(api_key=AZURE_OPENAI_API_KEY, api_version=AZURE_OPENAI_API_VERSION, azure_endpoint='https://' + AZURE_OPENAI_API_INSTANCE_NAME + '.openai.azure.com', azure_deployment=model)
+
         while True:
             print('text', text)
             text = text.replace('\n', ' ')
             try:
-                embedding = openai.Embedding.create(input = [text], model=model, deployment_id=model)
+                embedding = client.embeddings.create(input = [text], model=model)
                 break
-            except openai.error.RateLimitError:
+            except RateLimitError:
                 print('retrying...')
                 time.sleep(1)
-        return embedding
+        print('embedding', embedding.data[0].embedding)
+        return embedding.data[0].embedding
 
-    def process_input_with_retrieval(self, benefit, user_input, model=AZURE_OPENAI_API_DEPLOYMENT_NAME, provided_prompt="", add_guidance = True):
+    def process_input_with_retrieval(self, index, user_input, model=AZURE_OPENAI_API_DEPLOYMENT_NAME, provided_prompt="", functions:[]=None, rag = True, add_guidance = True):
+        print('rag', rag)
         delimiter = '```'
         sources = []
 
         embedding_cost = self.get_embedding_cost(Util().num_tokens_from_string(user_input))
-        embedding = self.get_embedding(user_input)['data'][0]['embedding']
-        combined_results = Repository().hybrid_search(benefit, user_input, embedding)
+        embedding = self.get_embedding(user_input)
+
+        combined_results = []
+        #['data'][0]['embedding']
+        if rag:
+            combined_results = Repository().hybrid_search(index, user_input, embedding)
         #Step 1: Get documents related to the user input from database
         #related_docs = Repository().get_top3_similar_docs(benefit, embedding)
         #for rl in related_docs:
@@ -110,7 +157,7 @@ class OpenAi:
         source_cost = 0
         content = ''
         i=0
-        if len(related_docs) == 0:
+        if rag and len(related_docs) == 0:
             messages = [
                 {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
             ]
@@ -208,10 +255,10 @@ class OpenAi:
             {'role': 'user', 'content': f'{delimiter}{user_input} {delimiter} '},
         ]
 
-        openai_response = self.get_completion_from_messages(messages, model).response        
-        
+        openai_response = self.get_completion_from_messages(messages, model, functions).response        
+        print('openai_response', openai_response)
         for substr in UNABLE_TO_ASWER:
-            if re.search(f'(^{substr})|(\s{substr})', openai_response.message.lower()):
+            if re.search(f'(^{substr})|(\s{substr})', openai_response.message.content.lower()):
                 print('Could not answer')
                 final_response = Response(openai_response.message, embedding_cost + source_cost + openai_response.cost, openai_response.role, list(), messages)
                 return final_response

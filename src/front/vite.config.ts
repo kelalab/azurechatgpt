@@ -11,9 +11,12 @@ export default defineConfig({
       "/messages": "http://127.0.0.1:8000",
       "/get_source": "http://127.0.0.1:8000",
       "/thumb": "http://127.0.0.1:8000",
+      "/add_document": "http://127.0.0.1:8000",
+      "/bot": "http://127.0.0.1:8000",
     },
   },
   build: {
     outDir: "../backend/static",
+    cssCodeSplit: false,
   },
 });

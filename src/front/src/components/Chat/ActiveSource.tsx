@@ -1,8 +1,14 @@
+import { PropsWithChildren } from "react";
 import "./activesource.css";
 
-const ActiveSource = (props) => {
+interface SourceProps extends PropsWithChildren{
+   activeSource: string;
+   setActiveSource: Function;
+}
+
+const ActiveSource = (props: SourceProps) => {
   const { activeSource, setActiveSource } = props;
-  console.log("active source", activeSource);
+  //console.log("active source", activeSource);
   return (
     <div className="source__text">
       <div className="border-b-2 flex flex-col w-full p-2">

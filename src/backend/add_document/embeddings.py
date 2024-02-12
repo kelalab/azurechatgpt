@@ -1,6 +1,6 @@
 import time
 from open_ai.open_ai import OpenAi 
-import openai.error
+import openai
 
 from model.constants import *
 
@@ -11,7 +11,7 @@ class Embeddings:
          try:
             embedding = OpenAi().get_embedding(text)
             break
-         except openai.error.RateLimitError as e:
+         except openai.RateLimitError as e:
             print('retrying...', e)
             time.sleep(1)
 
