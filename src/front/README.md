@@ -1,15 +1,40 @@
-# front
+# GPT UI
 
-To install dependencies:
+A custom UI for using and creating GPTs as a platform. A React frontend with a Nodejs Express.js proxy to serve the ui and forward calls to api layer.
+
+### To install dependencies:
 
 ```bash
 bun install
 ```
 
-To run:
+or
 
 ```bash
-bun run index.ts
+npm install
 ```
 
-This project was created using `bun init` in bun v1.0.4. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+### To run:
+
+```bash
+bun run start
+```
+
+or
+
+```bash
+npm run start
+```
+
+### Dev mode:
+
+Run the following in separate terminals
+```bash
+npm run dev-server
+```
+```bash
+npm run dev
+```
+
+
+
