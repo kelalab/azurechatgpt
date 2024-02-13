@@ -35,6 +35,8 @@ src/backend/env.py
 # data
 *.dita
 *.docx
+*.pdf
+docker-compose.yml
 
 __pycache__
 *.sh

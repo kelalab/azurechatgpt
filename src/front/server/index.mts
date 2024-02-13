@@ -10,8 +10,13 @@ const app = express();
 // register json body parser middleware
 app.use(express.json());
 const port = 8080
+const useMock = false;
 
-app.use('/bot', bot)
+if(useMock){
+    app.use('/bot', bot)
+}else{
+    app.use('/bot', proxy)
+}
 app.use('/message', proxy);
 app.use('/messages', proxy);
 
