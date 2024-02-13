@@ -58,7 +58,7 @@ def post_message(index:str, message: str, llm:str, systemPrompt: str, session_uu
     bot = repo.get_bot(index)
     if bot:
         print('bot', bot)
-        botModel = Bot(id=bot[0], name=bot[1], description=bot[2], model=bot[3], temperature=bot[4], prompt=bot[5], creator=bot[6], rag= bot[7], public = bot[8])
+        botModel = Bot(id=bot[0], name=bot[1], description=bot[2], prompt=bot[3], model=bot[4], temperature=bot[5], creator=bot[6], rag=bot[7], public=bot[8])
         print('bot', bot, botModel)
         rag = botModel.rag
         useHay = botModel.hay
