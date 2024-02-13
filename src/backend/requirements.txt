@@ -1,4 +1,4 @@
-fastapi==0.104.0
+fastapi==0.109.1
 filetype==1.2.0
 jq==1.6.0
 langchain==0.0.329
