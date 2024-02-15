@@ -19,7 +19,7 @@
     "allowJs": true,
     "types": [
       "web",
-      "bun-types" // add Bun global
+      //"bun-types" // add Bun global
     ]
   }
 }

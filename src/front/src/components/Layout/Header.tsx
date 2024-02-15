@@ -4,7 +4,7 @@ import { LogoKelaWhite } from "../../../kds/dist/logos"
 const Header = () => {
     return (
         <MainBar stackOnMobile={true}  className="relative">
-        <MainBarAction as="a" href="#">
+        <MainBarAction as="a" href="/">
             <div className="flex items-center gap-4 border-slate-400">
                 <img src={"/ai-icon.png"} className="h-8" />
                 <Heading as="h1" className="text-white m-0">Kelalab GPT</Heading>

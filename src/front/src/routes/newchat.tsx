@@ -52,9 +52,7 @@ const NewChat = () => {
   }
 
   return (
-    <Layout>
-        <ChatCreator save={save} newChatName={newChatName} newChatSystemPrompt={newChatSystemPrompt} setNewChatName={setNewChatName} setNewChatSystemPrompt={setNewChatSystemPrompt} uploadFile={uploadFile} newChatId={newChatId} newChatDescription={newChatDescription} setNewChatDescription={setNewChatDescription}/>
-    </Layout>
+    <ChatCreator save={save} newChatName={newChatName} newChatSystemPrompt={newChatSystemPrompt} setNewChatName={setNewChatName} setNewChatSystemPrompt={setNewChatSystemPrompt} uploadFile={uploadFile} newChatId={newChatId} newChatDescription={newChatDescription} setNewChatDescription={setNewChatDescription}/>
   );
 };
 export default NewChat;

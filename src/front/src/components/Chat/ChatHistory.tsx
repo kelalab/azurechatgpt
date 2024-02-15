@@ -1,9 +1,7 @@
 import { PropsWithChildren, useState } from "react";
 import { RMessage, Source } from "../../types";
 import { AI_NAME } from "../../constants";
-import Skeleton, { SkeletonTheme } from "react-loading-skeleton";
 import { FaThumbsUp, FaThumbsDown } from "react-icons/fa6";
-import "react-loading-skeleton/dist/skeleton.css";
 import "./chathistory.css";
 import ChatMessage from "../../../kds/dist/esm/ChatMessage";
 import Text from "../../../kds/dist/esm/Text";
@@ -56,7 +54,7 @@ const MessageBox = (props: MessageBoxProps) => {
   return (
     <>
     <ChatMessage position="left" loading={skeleton} name={user}>
-      <Text>{children}</Text>
+      <>{children}</>
     </ChatMessage>
     {/* <SkeletonTheme baseColor="#202020" highlightColor="#444">
       <div className="message__wrapper border-2 rounded-b-xl rounded-tr-xl w-4/5 p-4">
@@ -140,11 +138,11 @@ const ChatHistory = (props: any) => {
           if (message?.message?.role === "assistant") {
             return (
               <MessageBox key={"msg-" + idx} user={AI_NAME} message={message}>
-                <div>
+                <>
                   {message?.message?.content?.split("\n").map((m, idx) => {
-                    return <p key={`p-${idx}`}>{m}</p>;
+                    return <span key={`p-${idx}`}>{m}</span>;
                   })}
-                </div>
+                </>
                 <div className="amber text-sm ">
                   <div className="font-bold py-2">Lähteet:</div>
                   {message.sources?.map((source) => {
@@ -181,7 +179,7 @@ const ChatHistory = (props: any) => {
             }
           return (
             <MessageBox key={"msg-" + idx} right user="Minä">
-              <div>{message.message.content.replace(/```/g, "")}</div>
+              {message.message.content.replace(/```/g, "")}
             </MessageBox>
           );
         }

@@ -15,6 +15,8 @@ export type Bot = {
   id: string;
   name: string;
   description?: string;
+  prompt?: string;
+  model?: string;
 }
 
 export type SourceMeta = {
@@ -38,4 +40,12 @@ export type Source = {
   'Header 4'?: string;
   'Header 5'?: string;
   'Header 6'?: string;
+}
+
+
+export interface Path {
+  path?: string;
+  name?: string;
+  children?: Path[];
+  parent?: Path;
 }
