@@ -28,7 +28,7 @@ const NewChat = () => {
     })
   }
 
-  const save = async () => {
+  const save = async (publ:boolean = false) => {
     console.log('save', 'id:', newChatId, 'name:', newChatName, 'prompt:', newChatSystemPrompt);
     const saveResponse = await fetch('/bot', {
       method: 'PUT',
@@ -44,7 +44,7 @@ const NewChat = () => {
         temperature: newChatTemperature,
         prompt: newChatSystemPrompt,
         creator: "Testikäyttäjä",
-        public: false
+        public: publ
       })
     });
     const saveJson = await saveResponse.json()

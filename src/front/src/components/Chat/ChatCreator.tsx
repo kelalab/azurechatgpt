@@ -26,6 +26,7 @@ const ChatCreator = (props: CreatorProps) => {
   const [showSettings, setShowSettings] = useState(false);
   const [llm, setLlm] = useState("gpt-35-turbo-16k");
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [publc, setPublc] = useState(false);
 
   const functions_for_llm = [
     {
@@ -160,19 +161,19 @@ const ChatCreator = (props: CreatorProps) => {
         <AccordionBody>
         <InputGroup>
           <InputLabel htmlFor="name-assistant">Name of the assistant: </InputLabel>
-          <Input className="dark:bg-transparent dark:text-white dark:border-kela-gray-30" id="name-assistant" value={newChatName} />
+          <Input className="dark:bg-transparent dark:text-white dark:border-kela-gray-30" id="name-assistant" value={newChatName} onChange={(e) => setAssistantName(e.target.value)}/>
         </InputGroup>
         <InputGroup>
           <InputLabel htmlFor="description-assistant">Description of the assistant: </InputLabel>
-          <Textarea id="description-assistant" value={newChatDescription} />
+          <Textarea id="description-assistant" value={newChatDescription} onChange={(e) => setAssistantDescription(e.target.value)}/>
         </InputGroup>
         <InputGroup>
           <InputLabel htmlFor="prompt-assistant">Prompt of the assistant: </InputLabel>
-          <Textarea id="prompt-assistant" value={newChatSystemPrompt}/>
+          <Textarea id="prompt-assistant" value={newChatSystemPrompt} onChange={(e) => setAssistantSystemPrompt(e.target.value)}/>
         </InputGroup>
         <InputGroup>
           <InputLabel htmlFor="public-assistant">Julkinen</InputLabel>
-          <Checkbox id="public-assistant" className="dark:*:*:bg-transparent"></Checkbox>
+          <Checkbox id="public-assistant" className="dark:*:*:bg-transparent" checked={publc} onChange={() => setPublc(!publc)}></Checkbox>
         </InputGroup>
         <InputGroup>
         <InputLabel>Kielimalli:</InputLabel>

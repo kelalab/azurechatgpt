@@ -266,7 +266,7 @@ const ChatInput = (props: any) => {
     // </div>
     <Input type="search" aria-label="Kirjoita avustajalle viesti" onChange={(e) => setInput(e.currentTarget.value)}
          onKeyUp={handleKey}
-         value={input} addonAfter={<Button>Lähetä</Button>} />
+         value={input} addonAfter={<Button onClick={() => sendMessage(input)}>Lähetä</Button>} />
   );
 };
 export default ChatInput;
