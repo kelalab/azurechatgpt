@@ -11,8 +11,9 @@ export const doReq = async(method:string,host:string, url:string, body: any, con
         //body: body
         body: method === 'GET' ? undefined : JSON.stringify(body),
     })
+    const status = response.status;
     const json = await response.json();
-    return json;
+    return {status: status, json: json };
 }
 
 export const doFileUpload = async(method:string,host:string, url:string, file?: any) => {
@@ -26,7 +27,8 @@ export const doFileUpload = async(method:string,host:string, url:string, file?: 
         headers: {...formHeaders},
         body: form
     })
+    const status = response.status;
     const json = await response.json();
     console.log('resp json', json)
-    return json;
+    return {status: status, json: json };
 }

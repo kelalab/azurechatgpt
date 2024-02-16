@@ -24,7 +24,7 @@ router.get('/', async (req, res) => {
     //TODO: mock api
     const response = await doReq(req.method, APIHOST, req.originalUrl, req.body);
     console.log('response', response)
-    res.json(response);
+    res.status(response.status).json(response.json);
 })
 
 router.put('/', async (req, res) => {
@@ -32,11 +32,11 @@ router.put('/', async (req, res) => {
     //TODO: mock api
     if (req.file) {
         const response = await doFileUpload(req.method, APIHOST, req.originalUrl, req.file);
-        res.json(response);
+        res.status(response.status).json(response.json);
     } else {
         const response = await doReq(req.method, APIHOST, req.originalUrl, req.body);
         console.log('response', response)
-        res.json(response);
+        res.status(response.status).json(response.json);
     }
 })
 
@@ -45,11 +45,11 @@ router.post('/', async (req, res) => {
     //TODO: mock api
     if (req.file) {
         const response = await doFileUpload(req.method, APIHOST, req.originalUrl, req.file);
-        res.json(response);
+        res.status(response.status).json(response.json);
     } else {
         const response = await doReq(req.method, APIHOST, req.originalUrl, req.body);
         console.log('response', response)
-        res.json(response);
+        res.status(response.status).json(response.json);
     }
 })
 
