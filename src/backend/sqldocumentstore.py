@@ -51,16 +51,21 @@ class SQLDocumentStore:
         return self.fetchAll('document')
         
     def fetchAll(self, table) -> List[Document]:
-       cur = self.conn.cursor()
-       query = sql.SQL("SELECT * FROM {table} WHERE index={index}").format(table=sql.Identifier(table), index=sql.Literal(self.assistantId))
-       #cur.execute("SELECT * FROM %(table)s WHERE index=%(index)s", {'table':table, 'index':self.assistantId})
-       cur.execute(query)
-       ret = cur.fetchall()
-       cur.close()
-       docs = []
-       for r in ret:
-           docs.append(Document(content=r[0], id=r[4], meta=eval(r[5]), embedding=eval(r[6])))
-       return docs
+       try:
+        cur = self.conn.cursor()
+        query = sql.SQL("SELECT * FROM {table} WHERE index={index}").format(table=sql.Identifier(table), index=sql.Literal(self.assistantId))
+        #cur.execute("SELECT * FROM %(table)s WHERE index=%(index)s", {'table':table, 'index':self.assistantId})
+        cur.execute(query)
+        ret = cur.fetchall()
+        cur.close()
+        docs = []
+        for r in ret:
+            docs.append(Document(content=r[0], id=r[4], meta=eval(r[5]), embedding=eval(r[6])))
+        return docs
+       except psycopg2.errors.UndefinedTable:
+        self.conn.rollback()
+        self.create_table(table, {'content': 'text', 'content_type': 'text', 'index': 'varchar', 'vector_id': 'varchar', 'id': 'varchar', 'metadata': 'text', 'embedding':'vector(1536)'}, 'CONSTRAINT test_pkey PRIMARY KEY (index, id)')
+        return self.fetchAll(table)
 
     def write_documents(self, documents: List[Document], policy: DuplicatePolicy = DuplicatePolicy.FAIL) -> int:
         """
