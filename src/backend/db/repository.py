@@ -63,6 +63,7 @@ class Repository:
             temperature float,
             creator text,
             timestamp timestamptz,
+            rag boolean,
             public boolean
             );
             '''
