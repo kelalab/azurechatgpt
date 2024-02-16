@@ -1,6 +1,7 @@
 import { PropsWithChildren } from "react";
 import { Card, CardIcon, CardBody, CardTitle, Text, CardImage, Button } from '../../../kds/dist/esm'
 import { IconCaretRight } from '../../../kds/dist/icons/ui'
+import { InputGroup } from "../../../kds/dist/esm";
 
 export interface GPTProps extends PropsWithChildren {
   name?: string;
@@ -8,10 +9,11 @@ export interface GPTProps extends PropsWithChildren {
   icon?: any;
   image?: string;
   href?: string;
+  edit?: boolean;
 }
 
 const GPT_ = (props: GPTProps) => {
-  const { icon, name, description, href } = props;
+  const { icon, name, description, href, edit } = props;
   return (
     <a href={href}>
       <div className="flex flex-col items-center w-64 h-72">
@@ -26,7 +28,12 @@ const GPT_ = (props: GPTProps) => {
 };
 
 const GPT = (props: GPTProps) => {
-  const { icon, image, name, description, href } = props;
+  const { icon, image, name, description, href, edit } = props;
+
+  const handleDelete = () => {
+    console.log('delete handler')
+  }
+
   return (
     <Card  className="max-w-72 dark:border-kela-gray-80 ">
       {icon && <CardIcon className="bg-success-green-40">
@@ -37,7 +44,15 @@ const GPT = (props: GPTProps) => {
       <CardBody className="dark:bg-kela-gray-90">
         <CardTitle className="dark:text-white">{name}</CardTitle>
         <Text>{description}</Text>
-        <Button as="a" href={href} iconAfter={<IconCaretRight />}>Aloita</Button>
+        <InputGroup className="flex flex-wrap gap-4">
+          <Button as="a" href={href} iconAfter={<IconCaretRight />}>Aloita</Button>
+          {edit && 
+            <>
+              <Button appearance="outline" className="dark:bg-transparent dark:text-white">Muokkaa</Button>
+              <Button variant="danger" appearance="outline" className="dark:bg-transparent" onClick={handleDelete}>Poista</Button>
+            </>
+          }
+        </InputGroup>
       </CardBody>
     </Card>
   );

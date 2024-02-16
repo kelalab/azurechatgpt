@@ -49,6 +49,7 @@ const NewChat = () => {
     });
     const saveJson = await saveResponse.json()
     console.log('save response:', saveJson)
+    return saveJson;
   }
 
   return (

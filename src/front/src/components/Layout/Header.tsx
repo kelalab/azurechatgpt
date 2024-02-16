@@ -2,6 +2,7 @@ import { Heading, MainBar, MainBarAction } from "../../../kds/dist/esm/index"
 import { LogoKelaWhite } from "../../../kds/dist/logos"
 
 const Header = () => {
+
     return (
         <MainBar stackOnMobile={true}  className="relative">
         <MainBarAction as="a" href="/">

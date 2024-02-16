@@ -1,7 +1,7 @@
 import { ChangeEvent, MouseEvent, PropsWithChildren, useEffect, useState } from "react";
 import { v4 } from "uuid";
 import ChatWindow from "./ChatWindow";
-import { Accordion, AccordionBody, AccordionToggle, Button, Checkbox, Heading, InputGroup, Select, Text } from "../../../kds/dist/esm/index";
+import { Accordion, AccordionBody, AccordionToggle, Alert, Button, Checkbox, Heading, InputGroup, Select, Text } from "../../../kds/dist/esm/index";
 import InputLabel from "../../../kds/dist/esm/InputLabel";
 import Input from "../Input";
 import Textarea from "../Textarea";
@@ -27,6 +27,8 @@ const ChatCreator = (props: CreatorProps) => {
   const [llm, setLlm] = useState("gpt-35-turbo-16k");
   const [systemPrompt, setSystemPrompt] = useState("");
   const [publc, setPublc] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const functions_for_llm = [
     {
@@ -146,7 +148,12 @@ const ChatCreator = (props: CreatorProps) => {
 
   const saveAssistant = async (e: MouseEvent) => {
     console.log("saveAssistant called", e);
-    save()
+    setSaving(true)
+    const id = await save()
+    setSaving(false)
+    if(id){
+      setSaveSuccess(true)
+    }
   }
 
   return (
@@ -195,9 +202,12 @@ const ChatCreator = (props: CreatorProps) => {
         
         </AccordionBody>
       </Accordion>
-      <div className="flex justify-evenly mt-4 p-8">
+      <div className="flex mt-4 gap-8 py-8">
           <Button className="border-2 px-4 py-2" onClick={(e) => saveAssistant(e)}>Tallenna avustaja</Button>
           <Button appearance="outline" variant="danger" className="border-2 px-4 py-2 dark:bg-transparent dark:hover:bg-kela-gray-100">Peruuta</Button>
+      </div>
+      <div>
+          {saveSuccess && <Alert variant="success"><Text>Avustaja tallennettu.</Text></Alert>}
       </div>
       <Heading as="h2" className="pb-4 text-white">Interaktiivinen assistentti avustajan luontiin</Heading>
       <div className="flex flex-col w-full h-full">
@@ -223,4 +233,3 @@ const ChatCreator = (props: CreatorProps) => {
   );
 };
 export default ChatCreator;
-'[{"type":"function","function":{"name":"setAssistantName","description":"Set name for a new openai assistant","parameters":{"type":"object","properties":{"name":{"type":"string","description":"Name of the new assistant, e.g. /"MyAssistant/""}},"required":["name"]}}},{"type":"function","function":{"name":"setAssistantSystemPrompt","description":"Set system prompt for a new openai assistant","parameters":{"type":"object","properties":{"prompt":{"type":"string","description":"The complete system prompt for a new assistant"}},"required":["prompt"]}}},{"type":"function","function":{"name":"setAssistantDescription","description":"Set brief description for a new openai assistant","parameters":{"type":"object","properties":{"description":{"type":"string","description":"Brief description of the assistant"}},"required":["description"]}}}]'

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { PropsWithChildren, useReducer } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
@@ -16,6 +16,8 @@ import Select from "./routes/select";
 import Chat from "./routes/chat";
 import NewChat from "./routes/newchat";
 import Layout from "./components/Layout";
+
+import EditContext, {editReducer, initialState} from './context/EditContext';
 
 const rootElement = document.getElementById("root");
 const root = createRoot(rootElement!);
@@ -47,10 +49,27 @@ const router = createBrowserRouter([
 
 const queryClient = new QueryClient()
 
+/**
+ * 
+ * @param props 
+ * @returns 
+ */
+const EditContextProvider = (props: PropsWithChildren) => {
+  const [state,dispatch ] = useReducer(editReducer, initialState);
+  return (
+    <EditContext.Provider value={{state, dispatch}}>
+      {props.children}
+    </EditContext.Provider>
+
+  )
+}
+
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <EditContextProvider>
+        <RouterProvider router={router} />
+      </EditContextProvider>
     </QueryClientProvider>
   </React.StrictMode>
 );

@@ -10,3 +10,16 @@ export const fetchMyBots = async() => {
     }
     return []
 }
+
+export const fetchPublicBots = async() => {
+    const publicBotResp = await fetch('/bot')
+    if (publicBotResp.status === 200) {
+      const publicBotJson = await publicBotResp.json();
+      //if(myBotJson.detail === 'Not found')
+      console.log('publicBotJson', publicBotJson)
+      return publicBotJson
+      //setMyBots(myBotJson)
+      //dispatch({ type: MyBotsActions.SET_BOTS, payload: myBotJson })
+    }
+    return []
+}

@@ -4,13 +4,17 @@ import GPT from "./Gpt";
 import { Bot } from "../../types";
 import { Heading, Text } from "../../../kds/dist/esm/index";
 import MyBotsContext, { MyBotsActions, myBotsReducer, initialState } from "../../context/MyBotsContext";
+import EditContext from '../../context/EditContext';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { fetchMyBots } from "../../queries/bots";
+import { fetchMyBots, fetchPublicBots } from "../../queries/bots";
 
 const ChatSelection = () => {
   //const {state, dispatch} = useContext(MyBotsContext);
   const {state, dispatch} = useContext(MyBotsContext);
+  const editState = useContext(EditContext).state;
+
   const query = useQuery({queryKey: ['myBots'], queryFn: fetchMyBots})
+  const pub_bot_query = useQuery({queryKey: ['publicBots'], queryFn: fetchPublicBots})
 
   //const [state, dispatch] = useReducer(myBotsReducer, initialState);
   //const [myBots, setMyBots] = useState([])
@@ -19,6 +23,9 @@ const ChatSelection = () => {
   const myBots = query.data;
   //const myBots = state.myBots;
   console.log('myBots', myBots)
+
+  const publicBots = pub_bot_query.data
+  console.log('publicBots', publicBots)
   //const myBots = state.myBots;
   /*const fetchMyBots = async () => {
     const myBotResp = await fetch('/bot?userName=Testikäyttäjä', {
@@ -32,10 +39,11 @@ const ChatSelection = () => {
     }
   }*/
 
-  useEffect(() => {
-    /* Load public and own private GPTs here */
+  /*useEffect(() => {
+    // Load public and own private GPTs here 
+    fetchPublicBots()
     fetchMyBots()
-  }, []);
+  }, [])*/
   return (
       <div className="w-full p-2 flex flex-col overflow-hidden">
         <div className="flex flex-col p-8 gap-4">
@@ -64,6 +72,7 @@ const ChatSelection = () => {
                   name={bot.name}
                   href={`/chat/${bot.id}`}
                   description={bot.description}
+                  edit={editState}
                 />
               )
             })}</div>

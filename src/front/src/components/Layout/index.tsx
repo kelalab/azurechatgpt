@@ -1,4 +1,4 @@
-import { PropsWithChildren, useState, useEffect, useReducer } from "react"
+import { PropsWithChildren, useState, useEffect, useReducer, useContext } from "react"
 import Footer from "./Footer"
 import Header from "./Header"
 import { Page, Container, Tabs, Tab as KDSTab } from "../../../kds/dist/esm/index"
@@ -7,6 +7,7 @@ import MyBotsContext, { MyBotsActions, initialState, myBotsReducer } from "../..
 import { Outlet } from "react-router-dom"
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { fetchMyBots } from "../../queries/bots"
+import EditContext, {  } from "../../context/EditContext"
 
 interface LayoutProps extends PropsWithChildren { }
 
@@ -21,7 +22,10 @@ const Tab = (props) => {
  */
 const Layout = (props: LayoutProps) => {
     const [open, setOpen] = useState(true);
-    const [state, dispatch] = useReducer(myBotsReducer, initialState);
+    //const [state, dispatch] = useReducer(myBotsReducer, initialState);
+    const { state, dispatch } = useContext(EditContext);
+
+    const [activeTab, setActiveTab] = useState(0);
 
     const [dark, setDark] = useState(false)
     const { children } = props
@@ -43,9 +47,12 @@ const Layout = (props: LayoutProps) => {
         
     }, [])
 
-    return (
-        <MyBotsContext.Provider value={{ state, dispatch }}>
+    const handleTabChange = (tabIndex:number) => {
+        console.log('tabchange handler', tabIndex)
+        setActiveTab(tabIndex);
+    }
 
+    return (
             <div className="dark:bg-kela-gray-90 dark:text-white min-h-full">
                 {/*<Page
             className="h-full"
@@ -58,7 +65,7 @@ const Layout = (props: LayoutProps) => {
             footer={<Footer/>}
         />*/}
                 <Header />
-                <Tabs className="dark:bg-kela-blue-100">
+                <Tabs className="dark:bg-kela-blue-100" onSelect={handleTabChange} activePanel={activeTab}>
                     <Tab label="Koti"></Tab>
                     <Tab label="Muokkaa avustajaa"></Tab>
                     <Tab label="Keskusteluhistoria"></Tab>
@@ -75,7 +82,6 @@ const Layout = (props: LayoutProps) => {
                     </div>
                 </Container>
             </div>
-        </MyBotsContext.Provider>
     );
 }
 
